@@ -1,0 +1,24 @@
+# Secrets & credentials
+ssh/id_*
+ssh/.ssh/id_*
+ssh/known_hosts
+ssh/.ssh/known_hosts
+ssh/.ssh/agent/
+config/gh/hosts.yml
+
+# AWS (not managed by stow)
+aws/
+
+# Local tool settings
+.claude/
+
+# Nested git repos (managed as submodules instead)
+zprezto/.git
+config/base16-shell/.git
+config/nvim/.git
+config/.nvim/
+
+# OS artifacts
+.DS_Store
+*.swp
+*~
