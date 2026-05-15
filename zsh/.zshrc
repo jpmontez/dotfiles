@@ -1,3 +1,6 @@
+# ---- PATH dedupe ----
+typeset -U path PATH
+
 # ---- Completion ----
 autoload -Uz compinit
 compinit -u
@@ -40,10 +43,10 @@ fi
 # ---- Python ----
 path=("${HOME}/.local/bin" $path)
 
-# ---- uv ----
-export PATH="$HOME/.local/bin:$PATH"
-
 # ---- Bun ----
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
+
+# ---- Claude Code ----
+export CLAUDE_CODE_NO_FLICKER=1

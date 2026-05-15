@@ -23,6 +23,14 @@ if [[ "$PLATFORM" == "macos" ]]; then
     echo ">>> Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
+  # Ensure brew is on PATH for this session (fresh installs don't update it)
+  if ! command -v brew &>/dev/null; then
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
+  fi
   brew install stow zsh tmux neovim
 elif [[ "$PLATFORM" == "wsl" || "$PLATFORM" == "linux" ]]; then
   sudo apt-get update -qq
@@ -49,15 +57,9 @@ echo ">>> Stowing shared packages..."
 cd "$DOTFILES_DIR"
 stow --restow --target="$HOME" zsh git tmux ssh nvim base16
 
-# ---- Stow platform-specific packages ----
-if [[ "$PLATFORM" == "macos" ]]; then
-  echo ">>> Stowing macOS packages..."
-  stow --restow --target="$HOME" iterm2
-fi
-
 # ---- Set up zprezto ----
 echo ">>> Setting up zprezto..."
-if [[ ! -L "$HOME/.zprezto" ]]; then
+if [[ ! -e "$HOME/.zprezto" && ! -L "$HOME/.zprezto" ]]; then
   ln -s "$DOTFILES_DIR/zprezto" "$HOME/.zprezto"
 fi
 
@@ -77,7 +79,7 @@ if [[ "$SHELL" != "$ZSH_PATH" ]]; then
   if ! grep -qF "$ZSH_PATH" /etc/shells; then
     echo "$ZSH_PATH" | sudo tee -a /etc/shells
   fi
-  chsh -s "$ZSH_PATH"
+  chsh -s "$ZSH_PATH" || echo ">>> Warning: could not change default shell automatically; run 'chsh -s $ZSH_PATH' manually."
 fi
 
 # ---- Done ----
