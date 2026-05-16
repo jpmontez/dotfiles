@@ -37,8 +37,6 @@
 	updateRefs = true
 [merge]
 	conflictstyle = zdiff3
-[gitreview]
-	username = jmontez
 [user]
 	name = Julian Montez
 	email = jpmontez@users.noreply.github.com
