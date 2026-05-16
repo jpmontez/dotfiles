@@ -1,5 +1,3 @@
-alias ll='ls -lah'
-
 if [[ "$(uname)" == "Darwin" ]]; then
   alias terminal-notifier='reattach-to-user-namespace terminal-notifier'
 fi

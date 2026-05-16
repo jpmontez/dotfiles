@@ -1,10 +1,6 @@
 # ---- PATH dedupe ----
 typeset -U path PATH
 
-# ---- Completion ----
-autoload -Uz compinit
-compinit -u
-
 # ---- base16 shell ----
 BASE16_SHELL="$HOME/.config/base16-shell/"
 [ -n "$PS1" ] && \
@@ -20,6 +16,7 @@ fi
 prompt_newline='%667v '
 PROMPT=" $PROMPT"
 
+# Suppress Pure's empty pre-prompt newline so the blank line above the prompt isn't eaten.
 # https://github.com/sindresorhus/pure/issues/509#issuecomment-641001782
 print() {
   [ 0 -eq $# -a "prompt_pure_precmd" = "${funcstack[-1]}" ] || builtin print "$@";
@@ -28,7 +25,15 @@ print() {
 # ---- aliases ----
 alias ll='ls -lah'
 alias rsync='rsync -P'
-alias tmux='tmux new-session -A -s main'
+
+# Attach to or create the 'main' session when invoked bare; pass through otherwise.
+tmux() {
+  if (( $# == 0 )); then
+    command tmux new-session -A -s main
+  else
+    command tmux "$@"
+  fi
+}
 [ -f "$HOME/.aliases" ] && source "$HOME/.aliases"
 
 # ---- Go ----
@@ -46,7 +51,7 @@ path=("${HOME}/.local/bin" $path)
 # ---- Bun ----
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
+path=("$BUN_INSTALL/bin" $path)
 
 # ---- Claude Code ----
 export CLAUDE_CODE_NO_FLICKER=1
