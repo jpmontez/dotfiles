@@ -41,10 +41,16 @@ tmux() {
   fi
 }
 
-# Resume the most recent session in the current directory when invoked bare.
+# Resume the most recent session in the current directory when invoked bare,
+# but fall back to a fresh session if no prior conversation exists here.
 claude() {
   if (( $# == 0 )); then
-    command claude --continue
+    local sessions=("$HOME/.claude/projects/${PWD//\//-}"/*.jsonl(N))
+    if (( ${#sessions} > 0 )); then
+      command claude --continue
+    else
+      command claude
+    fi
   else
     command claude "$@"
   fi
