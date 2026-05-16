@@ -19,19 +19,21 @@ echo ">>> Detected platform: $PLATFORM"
 echo ">>> Installing dependencies..."
 
 if [[ "$PLATFORM" == "macos" ]]; then
+  # Install Homebrew if missing.
   if ! command -v brew &>/dev/null; then
     echo ">>> Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
-  # Ensure brew is on PATH for this session (fresh installs don't update it)
+
+  # Ensure brew is on PATH for this session (a fresh install doesn't update
+  # the current shell; a pre-existing install may be in a non-default location).
   if ! command -v brew &>/dev/null; then
-    if [[ -x /opt/homebrew/bin/brew ]]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -x /usr/local/bin/brew ]]; then
-      eval "$(/usr/local/bin/brew shellenv)"
-    fi
+    for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+      [[ -x "$brew_bin" ]] && eval "$("$brew_bin" shellenv)" && break
+    done
   fi
-  brew install stow zsh tmux neovim
+
+  brew bundle --file="$DOTFILES_DIR/Brewfile"
 elif [[ "$PLATFORM" == "wsl" || "$PLATFORM" == "linux" ]]; then
   sudo apt-get update -qq
   sudo apt-get install -y stow zsh tmux neovim xclip

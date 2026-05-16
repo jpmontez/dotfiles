@@ -39,3 +39,6 @@ config/.nvim/
 .DS_Store
 *.swp
 *~
+
+# Brew bundle lockfile (regenerated on each `brew bundle`)
+Brewfile.lock.json
