@@ -84,6 +84,19 @@ if [[ "$SHELL" != "$ZSH_PATH" ]]; then
   chsh -s "$ZSH_PATH" || echo ">>> Warning: could not change default shell automatically; run 'chsh -s $ZSH_PATH' manually."
 fi
 
+# ---- macOS system defaults ----
+applied_defaults=0
+if [[ "$PLATFORM" == "macos" ]]; then
+  echo ""
+  read -rp ">>> Apply macOS system defaults (Dock, Appearance, Trackpad)? [y/N] " _apply_defaults
+  if [[ "${_apply_defaults:-N}" =~ ^[Yy]$ ]]; then
+    bash "$DOTFILES_DIR/macos/defaults.sh"
+    applied_defaults=1
+  else
+    echo ">>> Skipped. Run manually: bash $DOTFILES_DIR/macos/defaults.sh"
+  fi
+fi
+
 # ---- Done ----
 echo ""
 echo "✓ Bootstrap complete."
@@ -92,3 +105,6 @@ echo "Next steps:"
 echo "  1. Generate or copy your SSH keys to ~/.ssh/"
 echo "  2. Re-authenticate GitHub CLI: gh auth login"
 echo "  3. Restart your terminal or run: exec zsh"
+if (( applied_defaults )); then
+  echo "  4. Log out and back in for the Caps Lock → Control remap to take effect."
+fi
