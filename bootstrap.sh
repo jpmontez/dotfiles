@@ -48,7 +48,13 @@ git submodule update --init --recursive
 # Stow 2.3.x bugs out when it finds absolute symlinks in the target dir.
 # Remove known conflicts so stow only encounters its own relative links.
 echo ">>> Cleaning up pre-existing symlinks..."
-for f in .zprezto .zlogin .zlogout .zpreztorc .zshenv .bash_profile; do
+prezto_links=(.zprezto .bash_profile)
+for rcfile in "$DOTFILES_DIR"/zprezto/runcoms/*; do
+  rcname="${rcfile##*/}"
+  [[ "$rcname" == "README.md" ]] && continue
+  prezto_links+=(".$rcname")
+done
+for f in "${prezto_links[@]}"; do
   if [[ -L "$HOME/$f" ]] && [[ "$(readlink "$HOME/$f")" == /* ]]; then
     rm -f "$HOME/$f"
   fi
@@ -57,7 +63,18 @@ done
 # ---- Stow shared packages ----
 echo ">>> Stowing shared packages..."
 cd "$DOTFILES_DIR"
-stow --restow --target="$HOME" zsh git tmux ssh nvim base16
+STOW_PACKAGES=(zsh git tmux ssh nvim base16)
+if ! stow --restow --target="$HOME" "${STOW_PACKAGES[@]}"; then
+  cat >&2 <<EOF
+
+>>> stow refused to overwrite existing files in \$HOME.
+    Options:
+      1. Back up and remove the conflicting files, then re-run this script.
+      2. Run: stow --adopt --target="\$HOME" <package>
+         This pulls the existing files into the repo; review with 'git diff' before committing.
+EOF
+  exit 1
+fi
 
 # ---- Set up zprezto ----
 echo ">>> Setting up zprezto..."
@@ -75,7 +92,7 @@ for rcfile in "$DOTFILES_DIR/zprezto/runcoms/"*; do
 done
 
 # ---- Set zsh as default shell ----
-ZSH_PATH="$(which zsh)"
+ZSH_PATH="$(command -v zsh)"
 if [[ "$SHELL" != "$ZSH_PATH" ]]; then
   echo ">>> Setting zsh as default shell..."
   if ! grep -qF "$ZSH_PATH" /etc/shells; then
