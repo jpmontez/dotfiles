@@ -22,6 +22,12 @@ print() {
   [ 0 -eq $# -a "prompt_pure_precmd" = "${funcstack[-1]}" ] || builtin print "$@";
 }
 
+# ---- environment ----
+export COLORTERM=truecolor
+export EDITOR=nvim
+# -F: quit if one screen, -R: pass raw color, -X: don't clear screen on exit
+export PAGER='less -FRX'
+
 # ---- aliases ----
 alias ll='ls -lah'
 alias rsync='rsync -P'
@@ -32,6 +38,15 @@ tmux() {
     command tmux new-session -A -s main
   else
     command tmux "$@"
+  fi
+}
+
+# Resume the most recent session in the current directory when invoked bare.
+claude() {
+  if (( $# == 0 )); then
+    command claude --continue
+  else
+    command claude "$@"
   fi
 }
 [ -f "$HOME/.aliases" ] && source "$HOME/.aliases"
@@ -52,6 +67,3 @@ path=("${HOME}/.local/bin" $path)
 [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 export BUN_INSTALL="$HOME/.bun"
 path=("$BUN_INSTALL/bin" $path)
-
-# ---- Claude Code ----
-export CLAUDE_CODE_NO_FLICKER=1
