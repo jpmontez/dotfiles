@@ -6,6 +6,23 @@ ssh/.ssh/known_hosts
 ssh/.ssh/agent/
 config/gh/hosts.yml
 
+# Generic credential patterns (defense-in-depth)
+*.pem
+*.key
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+*credentials*
+*secret*
+.netrc
+
+# Shell history
+.histfile
+.zsh_history
+.bash_history
+
 # AWS (not managed by stow)
 aws/
 
