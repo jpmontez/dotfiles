@@ -1,0 +1,23 @@
+# Matches stow's default global ignore list, minus .gitignore so that
+# git/.gitignore can be stowed to ~/.gitignore.
+
+RCS
+.+,v
+
+CVS
+\.\#.+
+\.cvsignore
+
+\.svn
+_darcs
+\.hg
+
+\.git
+\.gitmodules
+
+.+~
+\#.*\#
+
+^/README.*
+^/LICENSE.*
+^/COPYING
