@@ -31,6 +31,7 @@ Each directory mirrors `$HOME` and is symlinked in by `stow`:
 | `ssh`     | `.ssh/config`                     | SSH agent, ForwardAgent        |
 | `nvim`    | `.config/nvim`                    | Submodule: kickstart.nvim      |
 | `base16`  | `.config/base16-shell`            | Submodule: base16 color scheme |
+| `claude`  | `.claude/settings.json`           | Claude Code plugins, theme, cross-platform notification hook |
 | `zprezto` | `.zprezto`, `.zpreztorc`, etc.    | Manual symlinks via bootstrap  |
 
 ### Other files

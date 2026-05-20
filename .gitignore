@@ -26,8 +26,8 @@ config/gh/hosts.yml
 # AWS (not managed by stow)
 aws/
 
-# Local tool settings
-.claude/
+# Local tool settings (runtime state only — claude/ stow package is tracked)
+/.claude/
 
 # Nested git repos (managed as submodules instead)
 zprezto/.git

@@ -63,7 +63,7 @@ done
 # ---- Stow shared packages ----
 echo ">>> Stowing shared packages..."
 cd "$DOTFILES_DIR"
-STOW_PACKAGES=(zsh git tmux ssh nvim base16)
+STOW_PACKAGES=(zsh git tmux ssh nvim base16 claude)
 if ! stow --restow --target="$HOME" "${STOW_PACKAGES[@]}"; then
   cat >&2 <<EOF
 
