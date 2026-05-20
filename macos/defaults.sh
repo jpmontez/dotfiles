@@ -17,12 +17,14 @@ defaults write NSGlobalDomain _HIHideMenuBar                           -bool tru
 defaults write NSGlobalDomain AppleMiniaturizeOnDoubleClick            -bool false
 
 # ---- Keyboard: Caps Lock → Left Control ----
-# HID usage page 0x07: 0x39 = Caps Lock, 0xE4 = Left Control.
+# Full HID value = (page << 32) | usage; page 0x07 = Keyboard/Keypad.
 # Suffix 0-0-0 applies the mapping to all keyboards (vendor 0, product 0).
+HID_CAPS_LOCK=$((0x700000039))  # usage 0x39 = Caps Lock
+HID_LEFT_CTRL=$((0x7000000E4))  # usage 0xE4 = Left Control
 defaults -currentHost write -g com.apple.keyboard.modifiermapping.0-0-0 -array \
   "<dict>
-    <key>HIDKeyboardModifierMappingSrc</key><integer>$((0x700000039))</integer>
-    <key>HIDKeyboardModifierMappingDst</key><integer>$((0x7000000E4))</integer>
+    <key>HIDKeyboardModifierMappingSrc</key><integer>$HID_CAPS_LOCK</integer>
+    <key>HIDKeyboardModifierMappingDst</key><integer>$HID_LEFT_CTRL</integer>
   </dict>"
 
 # ---- Trackpad ----

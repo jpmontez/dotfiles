@@ -27,11 +27,9 @@ export COLORTERM=truecolor
 export EDITOR=nvim
 # -F: quit if one screen, -R: pass raw color, -X: don't clear screen on exit
 export PAGER='less -FRX'
+export CLAUDE_CODE_NO_FLICKER=1
 
-# ---- aliases ----
-alias ll='ls -lah'
-alias rsync='rsync -P'
-
+# ---- aliases / wrappers ----
 # Attach to or create the 'main' session when invoked bare; pass through otherwise.
 tmux() {
   if (( $# == 0 )); then
@@ -41,8 +39,10 @@ tmux() {
   fi
 }
 
-# Resume the most recent session in the current directory when invoked bare,
-# but fall back to a fresh session if no prior conversation exists here.
+# Resume the most recent Claude Code session for the current directory when
+# invoked bare, falling back to a fresh session if none exists.
+# Claude Code stores sessions under ~/.claude/projects/<pwd-with-/-as--> /;
+# ${PWD//\//-} encodes the path, and (N) suppresses the glob error on no match.
 claude() {
   if (( $# == 0 )); then
     local sessions=("$HOME/.claude/projects/${PWD//\//-}"/*.jsonl(N))

@@ -3,5 +3,3 @@ if [[ "$(uname)" == "Darwin" ]]; then
   eval "$(/opt/homebrew/bin/brew shellenv zsh)"
 fi
 
-# Set once at login so non-interactive subshells (e.g. GUI-launched processes) inherit it.
-export CLAUDE_CODE_NO_FLICKER=1
