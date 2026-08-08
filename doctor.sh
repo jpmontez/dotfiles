@@ -88,12 +88,11 @@ else
   fi
 
   for pkg in zsh git tmux ssh nvim base16 claude; do
-    args=(--no --restow --target="$HOME" "$pkg")
-    [[ "$pkg" == ssh ]] && args=(--no --restow --no-folding --target="$HOME" "$pkg")
+    args=(--dir="$DOTFILES_DIR" --no --restow --target="$HOME" "$pkg")
+    [[ "$pkg" == ssh ]] && args+=(--no-folding)
     # stow always emits a simulation-mode banner under --no; drop it so only
     # real conflicts and pending link changes remain.
-    out="$(cd "$DOTFILES_DIR" && stow "${args[@]}" 2>&1 |
-      grep -v '^WARNING: in simulation mode' || true)"
+    out="$(stow "${args[@]}" 2>&1 | grep -v '^WARNING: in simulation mode' || true)"
     if [[ -z "$out" ]]; then
       ok "$pkg"
     else

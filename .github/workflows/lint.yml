@@ -12,11 +12,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Pinned so CI and `brew install shellcheck` locally agree. The version
+  # preinstalled on ubuntu-latest is older and flags different rules, which
+  # makes a locally-clean script fail in CI.
+  SHELLCHECK_VERSION: v0.11.0
+
 jobs:
   shell:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install pinned shellcheck
+        run: |
+          url="https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -fsSL "$url" | tar -xJ
+          sudo install "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/
+          shellcheck --version
 
       - name: Run shellcheck
         run: shellcheck bootstrap.sh doctor.sh macos/*.sh
