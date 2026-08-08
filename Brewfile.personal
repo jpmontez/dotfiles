@@ -1,0 +1,32 @@
+# Opt-in install list — media, games, and creative apps.
+#
+# Skipped on work machines. bootstrap.sh asks once whether to include this
+# tier and records the answer in .machine (gitignored); pass --personal or
+# --no-personal to set it explicitly, or run on demand:
+#
+#   brew bundle --file=~/Development/dotfiles/Brewfile.personal
+#
+# `mas` entries require the App Store to be signed in first.
+
+# ---- CLI ----
+brew "exiftool"  # read/write image and video metadata
+
+# ---- GUI apps ----
+cask "adobe-creative-cloud"
+cask "iina"         # video player
+cask "openemu"      # retro game emulator
+cask "steam"
+cask "stremio"
+cask "transmission" # BitTorrent client
+cask "whatsapp"
+
+# ---- Mac App Store ----
+mas "Logic Pro",  id: 634148309   # multi-GB download
+mas "Infuse",     id: 1136220934
+mas "Highland 2", id: 1171820258
+
+# ---- Manual installs (no Homebrew cask exists) ----
+# These have to be downloaded and installed by hand:
+#   - DaVinci Resolve            https://www.blackmagicdesign.com/products/davinciresolve
+#   - Blackmagic RAW             https://www.blackmagicdesign.com/support
+#   - Blackmagic Proxy Generator https://www.blackmagicdesign.com/support
