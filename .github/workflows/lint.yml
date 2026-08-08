@@ -5,10 +5,53 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned so CI and `brew install shellcheck` locally agree. The version
+  # preinstalled on ubuntu-latest is older and flags different rules, which
+  # makes a locally-clean script fail in CI.
+  SHELLCHECK_VERSION: v0.11.0
+
 jobs:
-  shellcheck:
+  shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install pinned shellcheck
+        run: |
+          url="https://github.com/koalaman/shellcheck/releases/download/${SHELLCHECK_VERSION}/shellcheck-${SHELLCHECK_VERSION}.linux.x86_64.tar.xz"
+          curl -fsSL "$url" | tar -xJ
+          sudo install "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/
+          shellcheck --version
+
       - name: Run shellcheck
-        run: shellcheck bootstrap.sh macos/*.sh
+        run: shellcheck bootstrap.sh doctor.sh macos/*.sh
+
+      - name: Check zsh syntax
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y zsh
+          zsh -n zsh/.zshrc
+          zsh -n zsh/.zprofile
+          zsh -n zsh/.aliases
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Resolves every entry against Homebrew without installing anything.
+      - name: Validate Brewfiles
+        run: |
+          brew bundle list --file=Brewfile
+          brew bundle list --file=Brewfile.personal
+
+      - name: Lint property lists
+        run: plutil -lint macos/launch-clipy/Info.plist macos/launch-clipy/document.wflow

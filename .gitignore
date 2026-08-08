@@ -42,3 +42,6 @@ config/.nvim/
 
 # Brew bundle lockfile (regenerated on each `brew bundle`)
 Brewfile.lock.json
+
+# Per-machine tier record written by bootstrap.sh (PERSONAL=yes|no)
+.machine
