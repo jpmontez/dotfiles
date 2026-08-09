@@ -52,6 +52,7 @@ Each directory mirrors `$HOME` and is symlinked in by `stow`:
 | `Brewfile`          | Core CLI tools, Cask apps, and App Store apps — every machine   |
 | `Brewfile.personal` | Opt-in media, games, and creative apps                          |
 | `doctor.sh`         | Read-only drift check — see [Verifying](#verifying)             |
+| `lib.sh`            | Shared package list and machine-tier helpers for both scripts   |
 
 ---
 
@@ -109,7 +110,7 @@ It configures, end to end:
 - **Screenshots** — PNG, no shadow, saved to `~/Desktop/Screenshots`
 - **Menu bar** — Control Center icon and Now Playing visible
 - **Clock** — AM/PM with day of week, no date
-- **Security** — Touch ID for `sudo`, application firewall with stealth mode; FileVault status reported but never changed automatically
+- **Security** — Touch ID for `sudo`, application firewall with stealth mode; FileVault is never changed automatically (`doctor.sh` reports its status)
 - **Third-party apps** — sensible defaults for SizeUp and Clipy
 - **Login items** — SizeUp, Mullvad VPN, Amphetamine, Ice, and a Launch Clipy Automator applet, all registered automatically
 
@@ -261,7 +262,8 @@ stow --restow --target="$HOME" <package>
 If the tool needs installing too, add it to [`Brewfile`](Brewfile) (or
 [`Brewfile.personal`](Brewfile.personal)) rather than to `bootstrap.sh` — that
 keeps `doctor.sh` able to detect it as missing. Add the package name to
-`STOW_PACKAGES` in `bootstrap.sh` and to the loop in `doctor.sh`.
+`STOW_PACKAGES` in [`lib.sh`](lib.sh); `bootstrap.sh` and `doctor.sh` both read
+it from there.
 
 ---
 

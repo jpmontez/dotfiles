@@ -8,7 +8,7 @@ One-time system setup for fresh macOS installs. Not a stow package.
 |-------------------------------|--------------------------------------------------------------|
 | `defaults.sh`                 | Apply (or check) system defaults — Dock, keyboard, Finder, security |
 | `login-items.sh`              | Sourced helpers: `add_login_item`, `has_login_item`          |
-| `build-launch-clipy.sh`       | Build the Launch Clipy Automator app & register login item   |
+| `build-launch-clipy.sh`       | Build (or `--check`) the Launch Clipy Automator app          |
 | `launch-clipy/document.wflow` | Automator workflow source — runs `open -a Clipy`             |
 | `launch-clipy/Info.plist`     | App bundle metadata for the Launch Clipy app                 |
 
@@ -51,7 +51,7 @@ with an explicit check branch.
 - **Screenshots** — PNG, no window shadow, no floating thumbnail, saved to `~/Desktop/Screenshots`
 - **Screen saver** — password required immediately. *Best-effort:* since Ventura this pane is partly system-managed and the write may not stick; `--check` will show it as drift if so.
 - **Menu bar** — Control Center icon and Now Playing visible; clock shows AM/PM and day of week
-- **Security** — Touch ID for `sudo`, application firewall with stealth mode. FileVault is **reported only**, never enabled automatically — turning it on generates a recovery key a human has to record.
+- **Security** — Touch ID for `sudo`, application firewall with stealth mode. FileVault is never touched here — turning it on generates a recovery key a human has to record, so `doctor.sh` reports its status instead.
 - **SizeUp** — menu bar icon hidden, no popup on disabled state
 - **Clipy** — status item hidden (hotkey-only access)
 - **Login items** — SizeUp, Mullvad VPN, Amphetamine, Ice, and Launch Clipy registered automatically; apps that aren't installed are skipped
@@ -90,7 +90,11 @@ Clipy has no built-in "launch at login" option, so the workflow is wrapped in a 
 
 1. `build-launch-clipy.sh` constructs the `.app` bundle by copying the system's `Automator Application Stub` binary from `/System/Library/CoreServices/` and pairing it with `launch-clipy/document.wflow` + `Info.plist`.
 2. The workflow runs `open -a Clipy` via the Run Shell Script action.
-3. `add_login_item` (from `login-items.sh`) registers the resulting app as a hidden Login Item.
+3. The built app is a row in `defaults.sh`'s `LOGIN_ITEM_APPS`, so the normal login-item pass registers it as hidden.
+
+`--check` covers both halves: `build-launch-clipy.sh --check` reports whether the
+applet exists (it stays quiet when Clipy itself isn't installed, since there is
+nothing to build), and the `LOGIN_ITEM_APPS` row reports whether it's registered.
 
 The build is skipped with a message if Clipy isn't installed or if Apple has
 moved the Automator stub. Editing the launcher behavior is a matter of changing

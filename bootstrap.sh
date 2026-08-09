@@ -1,19 +1,25 @@
 #!/usr/bin/env bash
 # Bootstrap a machine from this repo. Idempotent; safe to re-run.
-#
-#   ./bootstrap.sh                  interactive
-#   ./bootstrap.sh --yes            assume defaults, never prompt
-#   ./bootstrap.sh --personal       include Brewfile.personal (records the choice)
-#   ./bootstrap.sh --no-personal    core packages only (records the choice)
-#   ./bootstrap.sh --no-defaults    skip macos/defaults.sh
-#   ./bootstrap.sh --check          report drift via doctor.sh and exit
 
 set -euo pipefail
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MACHINE_FILE="$DOTFILES_DIR/.machine"
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 trap 'echo ">>> bootstrap failed at line $LINENO" >&2' ERR
+
+usage() {
+  cat <<'EOF'
+Bootstrap a machine from this repo. Idempotent; safe to re-run.
+
+  ./bootstrap.sh                  interactive
+  ./bootstrap.sh --yes            assume defaults, never prompt
+  ./bootstrap.sh --personal       include Brewfile.personal (records the choice)
+  ./bootstrap.sh --no-personal    core packages only (records the choice)
+  ./bootstrap.sh --no-defaults    skip macos/defaults.sh
+  ./bootstrap.sh --check          report drift via doctor.sh and exit
+EOF
+}
 
 # ---- Options ----
 ASSUME_YES=0
@@ -27,44 +33,41 @@ while [[ $# -gt 0 ]]; do
     --no-personal) PERSONAL=no ;;
     --no-defaults) APPLY_DEFAULTS=0 ;;
     --check)       exec bash "$DOTFILES_DIR/doctor.sh" ;;
-    -h|--help)     sed -n '2,10p' "${BASH_SOURCE[0]}"; exit 0 ;;
+    -h|--help)     usage; exit 0 ;;
     *)             echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 
-# ---- Platform detection ----
-OS="$(uname)"
-if [[ "$OS" == "Darwin" ]]; then
-  PLATFORM="macos"
-elif grep -qi microsoft /proc/version 2>/dev/null; then
-  PLATFORM="wsl"
-else
-  PLATFORM="linux"
-fi
+# confirm <question> — true if the user says yes. Unattended runs (--yes or no
+# tty) never prompt and take the default baked into each call site.
+confirm() {
+  local answer
+  read -rp ">>> $1 [y/N] " answer
+  [[ "${answer:-N}" =~ ^[Yy]$ ]]
+}
+
+interactive() { (( ! ASSUME_YES )) && [[ -t 0 ]]; }
 
 echo ">>> Detected platform: $PLATFORM"
 
 # ---- Resolve the machine tier ----
-# An explicit flag wins and rewrites the record; otherwise reuse a previous
-# answer; otherwise ask. Unattended runs default to core-only so they never
-# pull down multi-gigabyte personal apps.
-if [[ -n "$PERSONAL" ]]; then
-  echo "PERSONAL=$PERSONAL" > "$MACHINE_FILE"
-elif [[ -f "$MACHINE_FILE" ]]; then
-  # shellcheck source=/dev/null
-  source "$MACHINE_FILE"
-  PERSONAL="${PERSONAL:-no}"
-elif (( ASSUME_YES )) || [[ ! -t 0 ]]; then
-  PERSONAL=no
-  echo "PERSONAL=$PERSONAL" > "$MACHINE_FILE"
-else
-  echo ""
-  read -rp ">>> Is this a personal machine? Installs media, games, and creative apps. [y/N] " _personal
-  [[ "${_personal:-N}" =~ ^[Yy]$ ]] && PERSONAL=yes || PERSONAL=no
-  echo "PERSONAL=$PERSONAL" > "$MACHINE_FILE"
+# An explicit flag wins; otherwise reuse a previous answer; otherwise ask.
+# Unattended runs default to core-only so they never pull down multi-gigabyte
+# personal apps. The resolved answer is always recorded for later runs.
+if [[ -z "$PERSONAL" ]]; then
+  if [[ -f "$MACHINE_FILE" ]]; then
+    load_machine_tier
+  elif interactive; then
+    echo ""
+    confirm "Is this a personal machine? Installs media, games, and creative apps." &&
+      PERSONAL=yes || PERSONAL=no
+  else
+    PERSONAL=no
+  fi
 fi
-echo ">>> Machine tier: $([[ "$PERSONAL" == yes ]] && echo "core + personal" || echo "core only")"
+save_machine_tier
+echo ">>> Machine tier: $(tier_label)"
 
 # ---- Install dependencies ----
 echo ">>> Installing dependencies..."
@@ -102,10 +105,10 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   # A missing App Store sign-in makes `mas` entries fail. Warn and carry on
   # rather than aborting before anything gets stowed.
-  brew bundle --file="$DOTFILES_DIR/Brewfile" || deps_failed=1
-  if [[ "$PERSONAL" == yes ]]; then
-    brew bundle --file="$DOTFILES_DIR/Brewfile.personal" || deps_failed=1
-  fi
+  load_brewfiles
+  for bf in "${BREWFILES[@]}"; do
+    brew bundle --file="$bf" || deps_failed=1
+  done
   (( deps_failed )) && echo ">>> Warning: some packages failed to install; continuing." >&2
 elif [[ "$PLATFORM" == "wsl" || "$PLATFORM" == "linux" ]]; then
   sudo apt-get update -qq
@@ -139,20 +142,16 @@ echo ">>> Stowing shared packages..."
 cd "$DOTFILES_DIR"
 
 # ssh goes first and on its own, so an unrelated conflict elsewhere can't leave
-# ~/.ssh deleted between the unfold and the restow.
-#
-# --no-folding keeps ~/.ssh a real directory containing a symlinked config.
-# Folded, ~/.ssh would itself be a symlink into this repo, and every key or
-# known_hosts file written there would land in the git working tree.
+# ~/.ssh deleted between the unfold and the restow. See lib.sh for why it needs
+# SSH_STOW_OPTS.
 stow_failed=0
 if [[ -L "$HOME/.ssh" ]]; then
   echo ">>> Unfolding ~/.ssh (currently a symlink into the repo)..."
   stow --delete --target="$HOME" ssh
 fi
-stow --restow --no-folding --target="$HOME" ssh || stow_failed=1
+stow --restow "${SSH_STOW_OPTS[@]}" --target="$HOME" ssh || stow_failed=1
 [[ -d "$HOME/.ssh" ]] && chmod 700 "$HOME/.ssh"
 
-STOW_PACKAGES=(zsh git tmux nvim base16 claude)
 stow --restow --target="$HOME" "${STOW_PACKAGES[@]}" || stow_failed=1
 
 if (( stow_failed )); then
@@ -196,23 +195,14 @@ fi
 # ---- macOS system defaults ----
 applied_defaults=0
 if [[ "$PLATFORM" == "macos" ]] && (( APPLY_DEFAULTS )); then
-  if (( ASSUME_YES )) || [[ ! -t 0 ]]; then
-    _apply_defaults=y
-  else
-    echo ""
-    read -rp ">>> Apply macOS system defaults (Dock, Appearance, Keyboard, Finder)? [y/N] " _apply_defaults
-  fi
-  if [[ "${_apply_defaults:-N}" =~ ^[Yy]$ ]]; then
+  interactive && echo ""
+  # Unattended runs apply them; interactive runs ask.
+  if ! interactive || confirm "Apply macOS system defaults (Dock, Appearance, Keyboard, Finder)?"; then
     bash "$DOTFILES_DIR/macos/defaults.sh"
     applied_defaults=1
   else
     echo ">>> Skipped. Run manually: bash $DOTFILES_DIR/macos/defaults.sh"
   fi
-fi
-
-# ---- Verify ----
-if [[ "$(readlink -f "$HOME/.zshrc" 2>/dev/null)" != "$DOTFILES_DIR"/* ]]; then
-  echo ">>> Warning: ~/.zshrc does not resolve into $DOTFILES_DIR." >&2
 fi
 
 # ---- Done ----

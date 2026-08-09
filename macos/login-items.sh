@@ -29,7 +29,8 @@ EOF
 # Returns 0 on success, 1 if the app is missing or registration failed.
 add_login_item() {
   local app="$1" hidden="${2:-true}" name
-  name="$(basename "$app" .app)"
+  name="${app##*/}"
+  name="${name%.app}"
 
   if [[ ! -e "$app" ]]; then
     echo "    - $name not installed — skipping login item"

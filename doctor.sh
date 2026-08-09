@@ -6,41 +6,36 @@
 
 set -uo pipefail  # deliberately no -e: every check runs even if one fails
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MACHINE_FILE="$DOTFILES_DIR/.machine"
+# shellcheck source=lib.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
 
 drift=0
 section() { echo ""; echo "== $1"; }
 ok()   { echo "  ✓ $*"; }
 bad()  { drift=1; echo "  ✗ $*"; }
 hint() { echo "      → $*"; }
+# detail — indent a captured block of command output under its ✗ line.
+detail() { while IFS= read -r line; do [[ -n "$line" ]] && echo "      $line"; done; }
 
-PERSONAL=no
-if [[ -f "$MACHINE_FILE" ]]; then
-  # shellcheck source=/dev/null
-  source "$MACHINE_FILE"
-  PERSONAL="${PERSONAL:-no}"
-fi
+load_machine_tier
 
 # ---------------------------------------------------------------------------
-section "Packages (tier: $([[ "$PERSONAL" == yes ]] && echo "core + personal" || echo "core only"))"
+section "Packages (tier: $(tier_label))"
 # ---------------------------------------------------------------------------
 if ! command -v brew &>/dev/null; then
   bad "Homebrew not installed"
   hint "./bootstrap.sh"
 else
-  BREWFILES=("$DOTFILES_DIR/Brewfile")
-  [[ "$PERSONAL" == yes ]] && BREWFILES+=("$DOTFILES_DIR/Brewfile.personal")
+  load_brewfiles
 
   for bf in "${BREWFILES[@]}"; do
-    if missing="$(brew bundle check --file="$bf" --verbose 2>&1 | grep '^→' || true)"; then
-      if [[ -n "$missing" ]]; then
-        bad "${bf##*/}: missing entries"
-        while IFS= read -r line; do echo "      $line"; done <<<"$missing"
-        hint "brew bundle install --file=$bf"
-      else
-        ok "${bf##*/}: all entries installed"
-      fi
+    missing="$(brew bundle check --file="$bf" --verbose 2>&1 | grep '^→' || true)"
+    if [[ -n "$missing" ]]; then
+      bad "${bf##*/}: missing entries"
+      detail <<<"$missing"
+      hint "brew bundle install --file=$bf"
+    else
+      ok "${bf##*/}: all entries installed"
     fi
   done
 
@@ -56,7 +51,7 @@ else
   rm -f "$combined"
   if [[ -n "$extras" ]]; then
     bad "installed but not listed in any in-scope Brewfile"
-    while IFS= read -r line; do echo "      $line"; done <<<"$extras"
+    detail <<<"$extras"
     hint "add them to Brewfile / Brewfile.personal, or uninstall them"
   else
     ok "no unlisted packages"
@@ -87,9 +82,9 @@ else
     fi
   fi
 
-  for pkg in zsh git tmux ssh nvim base16 claude; do
+  for pkg in "${STOW_PACKAGES[@]}" ssh; do
     args=(--dir="$DOTFILES_DIR" --no --restow --target="$HOME" "$pkg")
-    [[ "$pkg" == ssh ]] && args+=(--no-folding)
+    [[ "$pkg" == ssh ]] && args+=("${SSH_STOW_OPTS[@]}")
     # stow always emits a simulation-mode banner under --no; drop it so only
     # real conflicts and pending link changes remain.
     out="$(stow "${args[@]}" 2>&1 | grep -v '^WARNING: in simulation mode' || true)"
@@ -97,7 +92,7 @@ else
       ok "$pkg"
     else
       bad "$pkg is not fully stowed"
-      while IFS= read -r line; do [[ -n "$line" ]] && echo "      $line"; done <<<"$out"
+      detail <<<"$out"
       hint "./bootstrap.sh, or stow --adopt --target=\"\$HOME\" $pkg"
     fi
   done
@@ -106,7 +101,7 @@ fi
 # ---------------------------------------------------------------------------
 section "macOS defaults"
 # ---------------------------------------------------------------------------
-if [[ "$(uname)" != "Darwin" ]]; then
+if [[ "$PLATFORM" != "macos" ]]; then
   ok "skipped (not macOS)"
 else
   # Capture first: defaults.sh --check exits 1 on drift, and under pipefail a
@@ -127,9 +122,7 @@ section "Repo"
 sub_status="$(cd "$DOTFILES_DIR" && git submodule status 2>/dev/null)"
 if grep -qE '^[+-]' <<<"$sub_status"; then
   bad "submodules out of sync"
-  while IFS= read -r line; do
-    [[ "$line" =~ ^[+-] ]] && echo "      $line"
-  done <<<"$sub_status"
+  grep -E '^[+-]' <<<"$sub_status" | detail
   hint "git submodule update --init --recursive"
 else
   ok "submodules at recorded commits"
@@ -153,7 +146,7 @@ else
   hint "chsh -s $zsh_path"
 fi
 
-if [[ "$(uname)" == "Darwin" ]]; then
+if [[ "$PLATFORM" == "macos" ]]; then
   if xcode-select -p &>/dev/null; then
     ok "Xcode Command Line Tools at $(xcode-select -p)"
   else
