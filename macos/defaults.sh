@@ -122,12 +122,15 @@ DOCK_APPS=(
   "/Applications/Ghostty.app"
 )
 
-# Apps to register as login items.
+# Apps to register as login items. Launch Clipy is built by
+# build-launch-clipy.sh just before the login-item pass; listing it here rather
+# than registering it there keeps every login item under one --check.
 LOGIN_ITEM_APPS=(
   "/Applications/SizeUp.app"
   "/Applications/Mullvad VPN.app"
   "/Applications/Amphetamine.app"
   "/Applications/Ice.app"
+  "$HOME/Applications/Launch Clipy.app"
 )
 
 # Caps Lock → Left Control, as an HID modifier mapping.
@@ -230,10 +233,11 @@ process_dock_apps() {
   fi
 
   if [[ "$MODE" == check ]]; then
-    local listed missing=0
+    local listed name missing=0
     listed="$(dockutil --list 2>/dev/null || true)"
     for app in "${present[@]}"; do
-      grep -qF "$(basename "$app" .app)" <<<"$listed" || { missing=1; break; }
+      name="${app##*/}"
+      [[ "$listed" == *"${name%.app}"* ]] || { missing=1; break; }
     done
     if (( missing )); then
       note_drift "Dock contents differ from DOCK_APPS"
@@ -257,7 +261,8 @@ process_login_items() {
   local app name
   for app in "${LOGIN_ITEM_APPS[@]}"; do
     [[ -e "$app" ]] || continue
-    name="$(basename "$app" .app)"
+    name="${app##*/}"
+    name="${name%.app}"
 
     if [[ "$MODE" == check ]]; then
       if has_login_item "$app"; then
@@ -317,16 +322,6 @@ process_firewall() {
   echo "  ✓ Application firewall enabled"
 }
 
-# Report only — enabling FileVault generates a recovery key that a human has
-# to record, so it is never automated here.
-report_filevault() {
-  if fdesetup status 2>/dev/null | grep -q "FileVault is On"; then
-    note_ok "FileVault"
-  else
-    note_drift "FileVault is off — enable it in System Settings → Privacy & Security"
-  fi
-}
-
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
@@ -347,10 +342,21 @@ process_caps_lock
 process_dock_apps
 process_touch_id_sudo
 process_firewall
-report_filevault
 
+# Build the Launch Clipy applet before the login-item pass, so it is present for
+# the LOGIN_ITEM_APPS entry that registers it. In check mode the build script
+# reports whether it exists — the LOGIN_ITEM_APPS row can't, since it skips
+# missing apps and so cannot tell "never built" from "not installed".
 if [[ "$MODE" == apply ]]; then
   bash "$HERE/build-launch-clipy.sh"
+else
+  clipy_rc=0
+  bash "$HERE/build-launch-clipy.sh" --check || clipy_rc=$?
+  case "$clipy_rc" in
+    0) note_ok "Launch Clipy applet built" ;;
+    1) note_drift "Launch Clipy applet not built" ;;
+    *) ;;  # n/a — Clipy or the Automator stub is missing
+  esac
 fi
 process_login_items
 

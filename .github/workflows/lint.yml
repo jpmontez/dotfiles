@@ -31,16 +31,15 @@ jobs:
           sudo install "shellcheck-${SHELLCHECK_VERSION}/shellcheck" /usr/local/bin/
           shellcheck --version
 
+      # Derived from what's tracked, so a new script can't ship unlinted.
       - name: Run shellcheck
-        run: shellcheck bootstrap.sh doctor.sh macos/*.sh
+        run: git ls-files '*.sh' | xargs -r shellcheck
 
       - name: Check zsh syntax
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y zsh
-          zsh -n zsh/.zshrc
-          zsh -n zsh/.zprofile
-          zsh -n zsh/.aliases
+          git ls-files 'zsh/*' ':!zsh/*.md' | xargs -r -n1 zsh -n
 
   macos:
     runs-on: macos-latest
@@ -50,8 +49,9 @@ jobs:
       # Resolves every entry against Homebrew without installing anything.
       - name: Validate Brewfiles
         run: |
-          brew bundle list --file=Brewfile
-          brew bundle list --file=Brewfile.personal
+          git ls-files 'Brewfile*' | while read -r bf; do
+            brew bundle list --file="$bf"
+          done
 
       - name: Lint property lists
-        run: plutil -lint macos/launch-clipy/Info.plist macos/launch-clipy/document.wflow
+        run: git ls-files 'macos/*.plist' 'macos/*.wflow' | xargs -r plutil -lint
