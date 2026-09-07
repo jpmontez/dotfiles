@@ -76,7 +76,7 @@ SETTINGS=(
   "user|NSGlobalDomain|AppleShowAllExtensions|bool|true"
   "user|com.apple.finder|ShowPathbar|bool|true"
   "user|com.apple.finder|ShowStatusBar|bool|true"
-  "user|com.apple.finder|_FXShowPosixPathInTitle|bool|true"
+  "user|com.apple.finder|_FXShowPosixPathInTitle|bool|false"
   "user|com.apple.finder|FXPreferredViewStyle|string|clmv"  # column view
   "user|com.apple.finder|FXEnableExtensionChangeWarning|bool|false"
   "user|com.apple.finder|FXDefaultSearchScope|string|SCcf"  # search current folder
@@ -260,7 +260,9 @@ process_login_items() {
     if [[ "$MODE" == check ]]; then
       # Counts matches rather than asking `exists login item whose path is …`,
       # which errors with -1728 because the singular form can't coerce a
-      # filtered list.
+      # filtered list. The hidden flag is deliberately not checked: System
+      # Events cannot set it on macOS 13+ (login items moved to SMAppService),
+      # so it always reads false and apply could not fix a mismatch anyway.
       count="$(osascript 2>/dev/null <<EOF
 tell application "System Events" to return (count of (login items whose path is "$app"))
 EOF

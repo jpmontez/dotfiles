@@ -37,7 +37,7 @@ per-app defaults for SizeUp and Clipy. Beyond the table:
 - **Dock contents** — populated via `dockutil` from `DOCK_APPS`. Entries whose app doesn't exist on this macOS version are skipped rather than aborting the run.
 - **Screen saver** — password required immediately. *Best-effort:* since Ventura this pane is partly system-managed and the write may not stick; `--check` shows it as drift if so.
 - **Security** — Touch ID for `sudo` and the application firewall with stealth mode. FileVault is never touched here — turning it on generates a recovery key a human has to record, so `doctor.sh` reports its status instead.
-- **Login items** — `LOGIN_ITEM_APPS`, registered visible via System Events. Apps that aren't installed are skipped. Note `--check` compares login items by path only; it does not inspect the `hidden` flag, so a manually hidden item reads as matching.
+- **Login items** — `LOGIN_ITEM_APPS`, registered via System Events. Apps that aren't installed are skipped. The `hidden` property is passed as `false` to match what actually happens: since macOS 13 login items are backed by SMAppService and System Events can no longer set `hidden`, so it always reads back false. `--check` compares by path alone for the same reason.
 
 Settings that need `sudo` (Touch ID, firewall) prompt once up front rather than
 midway through. `--check` never needs sudo.

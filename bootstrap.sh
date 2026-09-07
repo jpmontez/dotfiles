@@ -158,18 +158,6 @@ stow --restow "${SSH_STOW_OPTS[@]}" --target="$HOME" ssh || stow_failed=1
 
 stow --restow --target="$HOME" "${STOW_PACKAGES[@]}" || stow_failed=1
 
-if (( stow_failed )); then
-  cat >&2 <<EOF
-
->>> stow refused to overwrite existing files in \$HOME.
-    Options:
-      1. Back up and remove the conflicting files, then re-run this script.
-      2. Run: stow --adopt --target="\$HOME" <package>
-         This pulls the existing files into the repo; review with 'git diff' before committing.
-EOF
-  exit 1
-fi
-
 # ---- Set up zprezto ----
 echo ">>> Setting up zprezto..."
 if [[ ! -e "$HOME/.zprezto" && ! -L "$HOME/.zprezto" ]]; then
@@ -185,6 +173,21 @@ for rcfile in "$DOTFILES_DIR/zprezto/runcoms/"*; do
   fi
 done
 shopt -u nullglob
+
+# Reported only now: the cleanup above deletes the prezto symlinks before stow
+# runs and the loop above restores them, so bailing out in between would leave
+# prezto half-linked.
+if (( stow_failed )); then
+  cat >&2 <<EOF
+
+>>> stow refused to overwrite existing files in \$HOME.
+    Options:
+      1. Back up and remove the conflicting files, then re-run this script.
+      2. Run: stow --adopt --target="\$HOME" <package>
+         This pulls the existing files into the repo; review with 'git diff' before committing.
+EOF
+  exit 1
+fi
 
 # ---- Set zsh as default shell ----
 ZSH_PATH="$(command -v zsh)"
