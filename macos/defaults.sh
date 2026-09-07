@@ -16,8 +16,6 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 MODE=apply
 case "${1:-}" in
   --check) MODE=check ;;
@@ -122,15 +120,13 @@ DOCK_APPS=(
   "/Applications/Ghostty.app"
 )
 
-# Apps to register as login items. Launch Clipy is built by
-# build-launch-clipy.sh just before the login-item pass; listing it here rather
-# than registering it there keeps every login item under one --check.
+# Apps to register as login items.
 LOGIN_ITEM_APPS=(
   "/Applications/SizeUp.app"
   "/Applications/Mullvad VPN.app"
   "/Applications/Amphetamine.app"
   "/Applications/Ice.app"
-  "$HOME/Applications/Launch Clipy.app"
+  "/Applications/Clipy.app"
 )
 
 # Caps Lock → Left Control, as an HID modifier mapping.
@@ -254,24 +250,42 @@ process_dock_apps() {
   dockutil --add "$HOME/Downloads" --view fan --display folder --no-restart >/dev/null
 }
 
+# Registration goes through System Events, which requires the calling terminal
+# to hold Automation permission for it. The first attempt raises a TCC prompt
+# that cannot be scripted — if it is denied, every later call fails silently at
+# the osascript level, so we surface a warning rather than swallowing it.
 process_login_items() {
-  # shellcheck source=macos/login-items.sh
-  source "$HERE/login-items.sh"
-
-  local app name
+  local app name count
   for app in "${LOGIN_ITEM_APPS[@]}"; do
     [[ -e "$app" ]] || continue
     name="${app##*/}"
     name="${name%.app}"
 
     if [[ "$MODE" == check ]]; then
-      if has_login_item "$app"; then
+      # Counts matches rather than asking `exists login item whose path is …`,
+      # which errors with -1728 because the singular form can't coerce a
+      # filtered list.
+      count="$(osascript 2>/dev/null <<EOF
+tell application "System Events" to return (count of (login items whose path is "$app"))
+EOF
+      )"
+      if [[ "${count:-0}" -gt 0 ]]; then
         note_ok "login item: $name"
       else
         note_drift "login item missing: $name"
       fi
+    elif osascript >/dev/null 2>&1 <<EOF
+tell application "System Events"
+  delete (every login item whose path is "$app")
+  make login item at end with properties {path:"$app", hidden:true}
+end tell
+EOF
+    then
+      echo "    ✓ $name registered as a login item"
     else
-      add_login_item "$app" true || true
+      echo "    ! Could not register $name as a login item." >&2
+      echo "      Grant this terminal Automation access to System Events in" >&2
+      echo "      System Settings → Privacy & Security → Automation, then re-run." >&2
     fi
   done
 }
@@ -342,22 +356,6 @@ process_caps_lock
 process_dock_apps
 process_touch_id_sudo
 process_firewall
-
-# Build the Launch Clipy applet before the login-item pass, so it is present for
-# the LOGIN_ITEM_APPS entry that registers it. In check mode the build script
-# reports whether it exists — the LOGIN_ITEM_APPS row can't, since it skips
-# missing apps and so cannot tell "never built" from "not installed".
-if [[ "$MODE" == apply ]]; then
-  bash "$HERE/build-launch-clipy.sh"
-else
-  clipy_rc=0
-  bash "$HERE/build-launch-clipy.sh" --check || clipy_rc=$?
-  case "$clipy_rc" in
-    0) note_ok "Launch Clipy applet built" ;;
-    1) note_drift "Launch Clipy applet not built" ;;
-    *) ;;  # n/a — Clipy or the Automator stub is missing
-  esac
-fi
 process_login_items
 
 if [[ "$MODE" == check ]]; then

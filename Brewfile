@@ -12,7 +12,6 @@
 brew "stow"    # symlink manager — deploys dotfiles packages into $HOME
 brew "zsh"     # Homebrew zsh for a current release independent of macOS
 brew "tmux"    # terminal multiplexer
-brew "reattach-to-user-namespace"  # tmux pbcopy bridge
 brew "git"     # .gitconfig needs >= 2.38 (rebase.updateRefs, zdiff3); macOS ships Xcode's git
 
 # ---- Editor & search ----

@@ -52,6 +52,3 @@ jobs:
           git ls-files 'Brewfile*' | while read -r bf; do
             brew bundle list --file="$bf"
           done
-
-      - name: Lint property lists
-        run: git ls-files 'macos/*.plist' 'macos/*.wflow' | xargs -r plutil -lint
