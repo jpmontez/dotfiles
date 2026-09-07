@@ -8,6 +8,11 @@
 # `mas` entries require the App Store to be signed in first — `brew bundle`
 # cannot sign in for you.
 
+# Adopt apps already present at the install destination instead of erroring.
+# Adoption needs the on-disk version to match the cask exactly; where it
+# does not, the entry still fails and `brew bundle` reports it.
+cask_args adopt: true
+
 # ---- Shell & dotfile plumbing ----
 brew "stow"    # symlink manager — deploys dotfiles packages into $HOME
 brew "zsh"     # Homebrew zsh for a current release independent of macOS
@@ -36,7 +41,9 @@ brew "terminal-notifier" # aliased in zsh/.aliases
 
 # ---- GUI apps ----
 cask "ghostty"            # GPU-accelerated terminal emulator
+cask "font-meslo-lg-nerd-font"  # Ghostty's configured font — falls back silently if absent
 cask "claude-code@latest"
+cask "claude"             # Claude desktop app
 cask "google-chrome"
 cask "docker-desktop"
 cask "1password"
@@ -49,6 +56,7 @@ cask "hhkb"               # Happy Hacking Keyboard configurator
 cask "logi-options+"      # Logitech input device config
 cask "mullvad-vpn"        # privacy VPN
 cask "pearcleaner"        # app uninstaller
+cask "onyx"               # macOS maintenance and cleanup utility
 cask "grandperspective"   # disk usage visualiser
 cask "xcodes-app"         # Xcode version manager
 cask "zoom"

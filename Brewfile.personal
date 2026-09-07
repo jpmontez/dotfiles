@@ -8,13 +8,21 @@
 #
 # `mas` entries require the App Store to be signed in first.
 
+# Adopt apps already present at the install destination instead of erroring.
+# Adoption needs the on-disk version to match the cask exactly; where it
+# does not, the entry still fails and `brew bundle` reports it.
+cask_args adopt: true
+
 # ---- CLI ----
 brew "exiftool"  # read/write image and video metadata
 
 # ---- GUI apps ----
 cask "adobe-creative-cloud"
 cask "iina"         # video player
+cask "discord"
+cask "jdownloader"  # download manager
 cask "openemu"      # retro game emulator
+cask "runelite"     # RuneScape client
 cask "steam"
 cask "stremio"
 cask "transmission" # BitTorrent client

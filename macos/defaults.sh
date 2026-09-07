@@ -55,9 +55,11 @@ SETTINGS=(
   # Smart quotes and em-dashes corrupt code, paths, and commit messages.
   "user|NSGlobalDomain|NSAutomaticQuoteSubstitutionEnabled|bool|false"
   "user|NSGlobalDomain|NSAutomaticDashSubstitutionEnabled|bool|false"
-  "user|NSGlobalDomain|NSAutomaticCapitalizationEnabled|bool|false"
-  "user|NSGlobalDomain|NSAutomaticPeriodSubstitutionEnabled|bool|false"
   "user|NSGlobalDomain|NSAutomaticSpellingCorrectionEnabled|bool|false"
+  # Capitalization and period substitution stay on — they don't mangle code,
+  # and this matches the live machine.
+  "user|NSGlobalDomain|NSAutomaticCapitalizationEnabled|bool|true"
+  "user|NSGlobalDomain|NSAutomaticPeriodSubstitutionEnabled|bool|true"
 
   # ---- Trackpad ----
   "user|com.apple.AppleMultitouchTrackpad|Clicking|bool|true"
@@ -75,7 +77,7 @@ SETTINGS=(
   "user|com.apple.finder|ShowPathbar|bool|true"
   "user|com.apple.finder|ShowStatusBar|bool|true"
   "user|com.apple.finder|_FXShowPosixPathInTitle|bool|true"
-  "user|com.apple.finder|FXPreferredViewStyle|string|Nlsv"  # list view
+  "user|com.apple.finder|FXPreferredViewStyle|string|clmv"  # column view
   "user|com.apple.finder|FXEnableExtensionChangeWarning|bool|false"
   "user|com.apple.finder|FXDefaultSearchScope|string|SCcf"  # search current folder
   # System-level counterpart to the `dsclean` alias in zsh/.aliases.
@@ -126,6 +128,7 @@ LOGIN_ITEM_APPS=(
   "/Applications/Mullvad VPN.app"
   "/Applications/Amphetamine.app"
   "/Applications/Ice.app"
+  "/Applications/Thaw.app"
   "/Applications/Clipy.app"
 )
 
@@ -277,7 +280,7 @@ EOF
     elif osascript >/dev/null 2>&1 <<EOF
 tell application "System Events"
   delete (every login item whose path is "$app")
-  make login item at end with properties {path:"$app", hidden:true}
+  make login item at end with properties {path:"$app", hidden:false}
 end tell
 EOF
     then
