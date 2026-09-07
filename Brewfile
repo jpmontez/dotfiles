@@ -47,10 +47,9 @@ cask "claude"             # Claude desktop app
 cask "google-chrome"
 cask "docker-desktop"
 cask "1password"
-cask "jordanbaird-ice"    # Ice — menu bar manager
 cask "sizeup"             # keyboard-driven window manager
 cask "clipy"              # clipboard manager with history
-cask "thaw"               # unquarantine downloaded apps
+cask "thaw"               # menu bar manager — succeeded Ice
 cask "keyboardcleantool"  # blocks input for keyboard cleaning
 cask "hhkb"               # Happy Hacking Keyboard configurator
 cask "logi-options+"      # Logitech input device config

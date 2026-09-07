@@ -1,0 +1,9 @@
+font-family = "MesloLGL Nerd Font Mono"
+font-size = 11
+window-height = 40
+window-width = 80
+
+# Make terminal bells (e.g. Claude Code "task ready") audible and visible
+# whether or not Ghostty is focused. Defaults only enable "attention",
+# which is unfocused-only and silent.
+bell-features = system,audio,attention,title

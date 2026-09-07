@@ -35,6 +35,7 @@ Each package directory mirrors `$HOME` and is symlinked in by `stow`:
 | `zsh`     | `.zshrc`, `.zprofile`, `.aliases` | Shell config + prezto init     |
 | `git`     | `.gitconfig`                      | Git identity and defaults      |
 | `tmux`    | `.tmux.conf`                      | Prefix, vim keys, copy-paste   |
+| `ghostty` | `.config/ghostty/config`          | Font, window size, bell behaviour |
 | `ssh`     | `.ssh/config`                     | Stowed `--no-folding` — see [below](#why-ssh-is-stowed-differently) |
 | `nvim`    | `.config/nvim`                    | Submodule: kickstart.nvim      |
 | `base16`  | `.config/base16-shell`            | Submodule: base16 color scheme |
@@ -84,7 +85,7 @@ bash macos/defaults.sh --check    # report drift, write nothing
 ```
 
 Appearance, keyboard (including Caps Lock → Left Control), text substitution,
-trackpad, Dock, Finder, screenshots, menu bar, Touch ID for `sudo`, the
+trackpad, Dock, Finder, menu bar, Touch ID for `sudo`, the
 application firewall, and login items. The `SETTINGS` table at the top of
 `macos/defaults.sh` is the authoritative list — both apply and `--check` read
 it, so it can't drift from what's documented. FileVault is never changed

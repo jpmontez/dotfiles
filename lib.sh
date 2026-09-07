@@ -13,7 +13,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MACHINE_FILE="$DOTFILES_DIR/.machine"
 
 # Stow packages carrying no special options.
-STOW_PACKAGES=(zsh git tmux nvim base16 claude)
+STOW_PACKAGES=(zsh git tmux ghostty nvim base16 claude)
 
 # ssh is stowed on its own: --no-folding keeps ~/.ssh a real directory holding a
 # symlinked config. Folded, ~/.ssh would itself be a symlink into this repo, and

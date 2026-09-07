@@ -84,12 +84,6 @@ SETTINGS=(
   "user|com.apple.desktopservices|DSDontWriteNetworkStores|bool|true"
   "user|com.apple.desktopservices|DSDontWriteUSBStores|bool|true"
 
-  # ---- Screenshots ----
-  "user|com.apple.screencapture|location|string|$HOME/Desktop/Screenshots"
-  "user|com.apple.screencapture|type|string|png"
-  "user|com.apple.screencapture|disable-shadow|bool|true"
-  "user|com.apple.screencapture|show-thumbnail|bool|false"
-
   # ---- Screen saver ----
   # Best-effort: since Ventura this pane is partly system-managed and the write
   # may not stick. --check surfaces that rather than letting it fail silently.
@@ -127,7 +121,6 @@ LOGIN_ITEM_APPS=(
   "/Applications/SizeUp.app"
   "/Applications/Mullvad VPN.app"
   "/Applications/Amphetamine.app"
-  "/Applications/Ice.app"
   "/Applications/Thaw.app"
   "/Applications/Clipy.app"
 )
@@ -349,7 +342,6 @@ if [[ "$MODE" == apply ]]; then
   osascript -e 'tell application "System Settings" to quit' 2>/dev/null || true
   # Prime sudo up front so the password prompt lands here rather than midway.
   sudo -v
-  mkdir -p "$HOME/Desktop/Screenshots"
 else
   echo ">>> Checking macOS defaults..."
 fi
