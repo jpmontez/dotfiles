@@ -7,3 +7,39 @@ window-width = 80
 # whether or not Ghostty is focused. Defaults only enable "attention",
 # which is unfocused-only and silent.
 bell-features = system,audio,attention,title
+
+# base16-ocean, pinned here rather than left to base16-shell alone. The shell
+# script only repaints the palette via OSC escapes once an interactive zsh
+# starts, so the terminal would otherwise open on Ghostty's default scheme and
+# flip mid-startup — and anything not launched from an interactive shell would
+# keep the wrong palette. Values are byte-identical to
+# base16-shell/scripts/base16-ocean.sh, so the two never disagree.
+# Slots 16-21 carry base09/0F/01/02/04/06, which base16 uses for the extra
+# neutrals (e.g. colour20 = base04) that plain ANSI has no room for.
+palette = 0=#2b303b
+palette = 1=#bf616a
+palette = 2=#a3be8c
+palette = 3=#ebcb8b
+palette = 4=#8fa1b3
+palette = 5=#b48ead
+palette = 6=#96b5b4
+palette = 7=#c0c5ce
+palette = 8=#65737e
+palette = 9=#bf616a
+palette = 10=#a3be8c
+palette = 11=#ebcb8b
+palette = 12=#8fa1b3
+palette = 13=#b48ead
+palette = 14=#96b5b4
+palette = 15=#eff1f5
+palette = 16=#d08770
+palette = 17=#ab7967
+palette = 18=#343d46
+palette = 19=#4f5b66
+palette = 20=#a7adba
+palette = 21=#dfe1e8
+
+background = #2b303b
+foreground = #c0c5ce
+selection-background = #4f5b66
+selection-foreground = #c0c5ce

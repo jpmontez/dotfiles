@@ -2,7 +2,12 @@
 typeset -U path PATH
 
 # ---- base16 shell ----
+# profile_helper only applies a theme if ~/.base16_theme exists; without this
+# it just defines the base16_* aliases and leaves the terminal on its own
+# palette. Ghostty pins the same scheme statically, so this mainly keeps the
+# runtime base16_* switchers working and exports BASE16_THEME.
 BASE16_SHELL="$HOME/.config/base16-shell/"
+BASE16_DEFAULT_THEME=ocean
 [ -n "$PS1" ] && \
     [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
         source "$BASE16_SHELL/profile_helper.sh"
