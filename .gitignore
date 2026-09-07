@@ -1,10 +1,7 @@
 # Secrets & credentials
-ssh/id_*
 ssh/.ssh/id_*
-ssh/known_hosts
 ssh/.ssh/known_hosts
 ssh/.ssh/agent/
-config/gh/hosts.yml
 
 # Generic credential patterns (defense-in-depth)
 *.pem
@@ -23,17 +20,11 @@ config/gh/hosts.yml
 .zsh_history
 .bash_history
 
-# AWS (not managed by stow)
-aws/
-
 # Local tool settings (runtime state only — claude/ stow package is tracked)
 /.claude/
 
 # Nested git repos (managed as submodules instead)
 zprezto/.git
-config/base16-shell/.git
-config/nvim/.git
-config/.nvim/
 
 # OS artifacts
 .DS_Store

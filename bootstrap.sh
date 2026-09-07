@@ -17,7 +17,6 @@ Bootstrap a machine from this repo. Idempotent; safe to re-run.
   ./bootstrap.sh --personal       include Brewfile.personal (records the choice)
   ./bootstrap.sh --no-personal    core packages only (records the choice)
   ./bootstrap.sh --no-defaults    skip macos/defaults.sh
-  ./bootstrap.sh --check          report drift via doctor.sh and exit
 EOF
 }
 
@@ -32,7 +31,6 @@ while [[ $# -gt 0 ]]; do
     --personal)    PERSONAL=yes ;;
     --no-personal) PERSONAL=no ;;
     --no-defaults) APPLY_DEFAULTS=0 ;;
-    --check)       exec bash "$DOTFILES_DIR/doctor.sh" ;;
     -h|--help)     usage; exit 0 ;;
     *)             echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -57,7 +55,9 @@ echo ">>> Detected platform: $PLATFORM"
 # personal apps. The resolved answer is always recorded for later runs.
 if [[ -z "$PERSONAL" ]]; then
   if [[ -f "$MACHINE_FILE" ]]; then
-    load_machine_tier
+    # shellcheck source=/dev/null
+    source "$MACHINE_FILE"
+    PERSONAL="${PERSONAL:-no}"
   elif interactive; then
     echo ""
     confirm "Is this a personal machine? Installs media, games, and creative apps." &&
@@ -66,8 +66,11 @@ if [[ -z "$PERSONAL" ]]; then
     PERSONAL=no
   fi
 fi
-save_machine_tier
-echo ">>> Machine tier: $(tier_label)"
+echo "PERSONAL=$PERSONAL" > "$MACHINE_FILE"
+
+tier="core only"
+[[ "$PERSONAL" == yes ]] && tier="core + personal"
+echo ">>> Machine tier: $tier"
 
 # ---- Install dependencies ----
 echo ">>> Installing dependencies..."
@@ -105,12 +108,13 @@ if [[ "$PLATFORM" == "macos" ]]; then
 
   # A missing App Store sign-in makes `mas` entries fail. Warn and carry on
   # rather than aborting before anything gets stowed.
-  load_brewfiles
+  BREWFILES=("$DOTFILES_DIR/Brewfile")
+  [[ "$PERSONAL" == yes ]] && BREWFILES+=("$DOTFILES_DIR/Brewfile.personal")
   for bf in "${BREWFILES[@]}"; do
     brew bundle --file="$bf" || deps_failed=1
   done
   (( deps_failed )) && echo ">>> Warning: some packages failed to install; continuing." >&2
-elif [[ "$PLATFORM" == "wsl" || "$PLATFORM" == "linux" ]]; then
+else
   sudo apt-get update -qq
   sudo apt-get install -y git curl stow zsh tmux neovim xclip ripgrep fd-find
 fi
@@ -154,18 +158,6 @@ stow --restow "${SSH_STOW_OPTS[@]}" --target="$HOME" ssh || stow_failed=1
 
 stow --restow --target="$HOME" "${STOW_PACKAGES[@]}" || stow_failed=1
 
-if (( stow_failed )); then
-  cat >&2 <<EOF
-
->>> stow refused to overwrite existing files in \$HOME.
-    Options:
-      1. Back up and remove the conflicting files, then re-run this script.
-      2. Run: stow --adopt --target="\$HOME" <package>
-         This pulls the existing files into the repo; review with 'git diff' before committing.
-EOF
-  exit 1
-fi
-
 # ---- Set up zprezto ----
 echo ">>> Setting up zprezto..."
 if [[ ! -e "$HOME/.zprezto" && ! -L "$HOME/.zprezto" ]]; then
@@ -181,6 +173,21 @@ for rcfile in "$DOTFILES_DIR/zprezto/runcoms/"*; do
   fi
 done
 shopt -u nullglob
+
+# Reported only now: the cleanup above deletes the prezto symlinks before stow
+# runs and the loop above restores them, so bailing out in between would leave
+# prezto half-linked.
+if (( stow_failed )); then
+  cat >&2 <<EOF
+
+>>> stow refused to overwrite existing files in \$HOME.
+    Options:
+      1. Back up and remove the conflicting files, then re-run this script.
+      2. Run: stow --adopt --target="\$HOME" <package>
+         This pulls the existing files into the repo; review with 'git diff' before committing.
+EOF
+  exit 1
+fi
 
 # ---- Set zsh as default shell ----
 ZSH_PATH="$(command -v zsh)"

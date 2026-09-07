@@ -15,18 +15,26 @@ ok()   { echo "  ✓ $*"; }
 bad()  { drift=1; echo "  ✗ $*"; }
 hint() { echo "      → $*"; }
 # detail — indent a captured block of command output under its ✗ line.
-detail() { while IFS= read -r line; do [[ -n "$line" ]] && echo "      $line"; done; }
+detail() { grep . | sed 's/^/      /'; }
 
-load_machine_tier
+# Tier comes from the file, never from an inherited PERSONAL in the environment.
+PERSONAL=no
+# shellcheck source=/dev/null
+[[ -f "$MACHINE_FILE" ]] && source "$MACHINE_FILE"
+PERSONAL="${PERSONAL:-no}"
+
+tier="core only"
+[[ "$PERSONAL" == yes ]] && tier="core + personal"
 
 # ---------------------------------------------------------------------------
-section "Packages (tier: $(tier_label))"
+section "Packages (tier: $tier)"
 # ---------------------------------------------------------------------------
 if ! command -v brew &>/dev/null; then
   bad "Homebrew not installed"
   hint "./bootstrap.sh"
 else
-  load_brewfiles
+  BREWFILES=("$DOTFILES_DIR/Brewfile")
+  [[ "$PERSONAL" == yes ]] && BREWFILES+=("$DOTFILES_DIR/Brewfile.personal")
 
   for bf in "${BREWFILES[@]}"; do
     missing="$(brew bundle check --file="$bf" --verbose 2>&1 | grep '^→' || true)"
@@ -39,16 +47,14 @@ else
     fi
   done
 
-  # `brew bundle` accepts a single --file, so concatenate the in-scope
-  # Brewfiles to check the reverse direction. cleanup without --force only
+  # `brew bundle` accepts a single --file, so feed it the in-scope Brewfiles
+  # concatenated to check the reverse direction. cleanup without --force only
   # lists; it removes nothing.
-  combined="$(mktemp)"
-  cat "${BREWFILES[@]}" > "$combined"
+  #
   # Keep only the "Would uninstall …" sections; the trailing `brew cleanup`
   # section is about stale download caches, not package drift.
-  extras="$(brew bundle cleanup --file="$combined" 2>/dev/null |
+  extras="$(brew bundle cleanup --file=<(cat "${BREWFILES[@]}") 2>/dev/null |
     awk '/^Would uninstall/ {f=1; print; next} /^Would `brew cleanup`/ {f=0} f && NF' || true)"
-  rm -f "$combined"
   if [[ -n "$extras" ]]; then
     bad "installed but not listed in any in-scope Brewfile"
     detail <<<"$extras"

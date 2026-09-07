@@ -59,12 +59,7 @@ claude() {
 
 # ---- Go ----
 export GOPATH="${HOME}/Development/go"
-if [[ "$(uname)" == "Darwin" ]]; then
-  export GOROOT="$(brew --prefix golang)/libexec"
-  path=("${GOPATH}/bin" "${GOROOT}/bin" $path)
-else
-  path=("${GOPATH}/bin" $path)
-fi
+path=("${GOPATH}/bin" $path)
 
 # ---- Python ----
 path=("${HOME}/.local/bin" $path)

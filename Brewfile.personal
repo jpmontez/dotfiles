@@ -8,13 +8,20 @@
 #
 # `mas` entries require the App Store to be signed in first.
 
+# Adopt apps already present at the install destination instead of erroring.
+# Adoption needs the on-disk version to match the cask exactly; where it
+# does not, the entry still fails and `brew bundle` reports it.
+cask_args adopt: true
+
 # ---- CLI ----
 brew "exiftool"  # read/write image and video metadata
 
 # ---- GUI apps ----
 cask "adobe-creative-cloud"
 cask "iina"         # video player
-cask "openemu"      # retro game emulator
+cask "discord"
+cask "jdownloader"  # download manager
+cask "runelite"     # RuneScape client
 cask "steam"
 cask "stremio"
 cask "transmission" # BitTorrent client
@@ -27,6 +34,8 @@ mas "Highland 2", id: 1171820258
 
 # ---- Manual installs (no Homebrew cask exists) ----
 # These have to be downloaded and installed by hand:
+#   - OpenEmu                    https://openemu.org
+#     Its cask was disabled 2026-09-01 for failing the macOS Gatekeeper check.
 #   - DaVinci Resolve            https://www.blackmagicdesign.com/products/davinciresolve
 #   - Blackmagic RAW             https://www.blackmagicdesign.com/support
 #   - Blackmagic Proxy Generator https://www.blackmagicdesign.com/support
