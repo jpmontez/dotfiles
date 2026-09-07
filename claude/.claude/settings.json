@@ -3,10 +3,20 @@
   "hooks": {
     "Notification": [
       {
+        "matcher": "permission_prompt|agent_needs_input",
         "hooks": [
           {
             "type": "command",
-            "command": "afplay /System/Library/Sounds/Glass.aiff"
+            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Glass.aiff || true"
+          }
+        ]
+      },
+      {
+        "matcher": "idle_prompt|agent_completed",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Pop.aiff || true"
           }
         ]
       }
@@ -30,9 +40,24 @@
       }
     }
   },
-  "modelSettings": {
-    "claude-sonnet-5": {}
+  "permissions": {
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(git push --force *)",
+      "Bash(git push * --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * -f *)",
+      "Bash(sh)",
+      "Bash(bash)",
+      "Bash(zsh)"
+    ]
   },
-  "theme": "auto",
-  "preferredNotifChannel": "ghostty"
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "theme": "auto"
 }
