@@ -1,44 +1,43 @@
 {
-  "model": "sonnet",
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt|agent_needs_input",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Glass.aiff || true"
-          }
-        ]
-      },
-      {
-        "matcher": "idle_prompt|agent_completed",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Pop.aiff || true"
-          }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
-    "superpowers@claude-plugins-official": false,
+    "claude-md-management@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "claude-md-management@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "ponytail@ponytail": true,
     "security-guidance@claude-plugins-official": true,
-    "swift-lsp@claude-plugins-official": true,
-    "ponytail@ponytail": true
+    "superpowers@claude-plugins-official": false,
+    "swift-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "ponytail": {
       "source": {
-        "source": "github",
-        "repo": "DietrichGebert/ponytail"
+        "repo": "DietrichGebert/ponytail",
+        "source": "github"
       }
     }
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Glass.aiff || true",
+            "type": "command"
+          }
+        ],
+        "matcher": "permission_prompt|agent_needs_input"
+      },
+      {
+        "hooks": [
+          {
+            "command": "command -v afplay >/dev/null && afplay /System/Library/Sounds/Pop.aiff || true",
+            "type": "command"
+          }
+        ],
+        "matcher": "idle_prompt|agent_completed"
+      }
+    ]
   },
   "permissions": {
     "deny": [
@@ -56,8 +55,7 @@
     ]
   },
   "statusLine": {
-    "type": "command",
-    "command": "~/.claude/statusline.sh"
-  },
-  "theme": "auto"
+    "command": "~/.claude/statusline.sh",
+    "type": "command"
+  }
 }

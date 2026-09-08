@@ -19,6 +19,18 @@ Personal dotfiles managed with GNU stow. Full details: README.md.
   `doctor.sh` detect it's missing.
 - The repo must stay cloned at `~/Development/dotfiles`; stow's symlinks are
   relative to that path.
+- `claude/.claude/settings.json` is owned by Claude Code, which rewrites it on
+  every `/model` switch, so it's handled in two halves. `.gitattributes` runs it
+  through `claude-settings-clean.py` (drops the volatile keys, sorts the rest)
+  so commits only ever carry durable config; a new key Claude Code writes back
+  as state goes in that script's `VOLATILE`. The file is also marked
+  `skip-worktree`, because a clean filter alone doesn't quiet `git status` —
+  git's refresh path hashes the file raw. Both halves are per-clone index and
+  config state: `bootstrap.sh` sets them, `doctor.sh` checks them.
+- To commit a deliberate change to that settings file, unhide it first:
+  `git update-index --no-skip-worktree claude/.claude/settings.json`, commit,
+  then re-hide with `--skip-worktree`. While it's hidden, git ignores every
+  local edit to it, including one you meant to keep.
 - Shell scripts: keep `shellcheck`-clean
   (`shellcheck bootstrap.sh doctor.sh lib.sh macos/*.sh`).
 
