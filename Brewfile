@@ -24,6 +24,7 @@ brew "neovim"          # editor (configured via nvim/ package)
 brew "ripgrep"         # kickstart.nvim live-grep
 brew "fd"              # kickstart.nvim file finder
 brew "tree-sitter-cli" # nvim treesitter parser builds
+brew "tree"            # directory listing
 
 # ---- Dev tooling ----
 brew "gh"              # GitHub CLI — auth, PRs, issues
@@ -64,7 +65,6 @@ cask "zoom"
 mas "Amphetamine",               id: 937984704   # prevent sleep / screen saver
 mas "Balance Lock",              id: 1019371109  # keep audio balance centred
 mas "Little Snitch Mini",        id: 1629008763  # outbound connection monitor
-mas "Tomito",                    id: 1526042938  # pomodoro timer
 
 # Safari extensions
 mas "1Password for Safari",      id: 1569813296
