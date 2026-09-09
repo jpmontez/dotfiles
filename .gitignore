@@ -23,6 +23,10 @@ ssh/.ssh/agent/
 # Local tool settings (runtime state only — claude/ stow package is tracked)
 /.claude/
 
+# Claude Code owns ~/.claude/settings.json and rewrites it on every /model
+# switch, so it's installed as a plain file rather than stowed from here.
+claude/.claude/settings.json
+
 # Nested git repos (managed as submodules instead)
 zprezto/.git
 

@@ -134,21 +134,6 @@ else
   ok "submodules at recorded commits"
 fi
 
-configured_filter="$(cd "$DOTFILES_DIR" && git config --get "$CLAUDE_SETTINGS_FILTER" 2>/dev/null)"
-if [[ "$configured_filter" == "$CLAUDE_SETTINGS_FILTER_CMD" ]]; then
-  ok "Claude settings clean filter registered"
-else
-  bad "Claude settings clean filter not registered"
-  hint "git -C $DOTFILES_DIR config $CLAUDE_SETTINGS_FILTER $CLAUDE_SETTINGS_FILTER_CMD"
-fi
-
-if [[ "$(cd "$DOTFILES_DIR" && git ls-files -v "$CLAUDE_SETTINGS_FILE" 2>/dev/null)" == S* ]]; then
-  ok "Claude settings marked skip-worktree"
-else
-  bad "Claude settings not marked skip-worktree"
-  hint "git -C $DOTFILES_DIR update-index --skip-worktree $CLAUDE_SETTINGS_FILE"
-fi
-
 if [[ -n "$(cd "$DOTFILES_DIR" && git status --porcelain 2>/dev/null)" ]]; then
   bad "working tree is dirty"
   hint "git -C $DOTFILES_DIR status"
