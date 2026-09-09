@@ -119,14 +119,6 @@ else
   sudo apt-get install -y git curl stow zsh tmux neovim xclip ripgrep fd-find
 fi
 
-# ---- Register the Claude settings clean filter ----
-# .gitattributes names the filter; git only ever runs one it has been given a
-# command for, so an unregistered clone silently commits the volatile keys.
-echo ">>> Registering the Claude settings clean filter..."
-cd "$DOTFILES_DIR"
-git config "$CLAUDE_SETTINGS_FILTER" "$CLAUDE_SETTINGS_FILTER_CMD"
-git update-index --skip-worktree "$CLAUDE_SETTINGS_FILE"
-
 # ---- Init git submodules ----
 echo ">>> Initializing git submodules..."
 cd "$DOTFILES_DIR"
