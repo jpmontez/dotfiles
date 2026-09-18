@@ -36,9 +36,11 @@ export CLAUDE_CODE_NO_FLICKER=1
 
 # ---- aliases / wrappers ----
 # Attach to or create the 'main' session when invoked bare; pass through otherwise.
+# -D detaches any other client first: with window-size latest, a stale smaller
+# client (old tab/split) would otherwise pin windows to its size.
 tmux() {
   if (( $# == 0 )); then
-    command tmux new-session -A -s main
+    command tmux new-session -A -D -s main
   else
     command tmux "$@"
   fi
