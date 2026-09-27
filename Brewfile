@@ -18,6 +18,7 @@ brew "stow"    # symlink manager — deploys dotfiles packages into $HOME
 brew "zsh"     # Homebrew zsh for a current release independent of macOS
 brew "tmux"    # terminal multiplexer
 brew "git"     # .gitconfig needs >= 2.38 (rebase.updateRefs, zdiff3); macOS ships Xcode's git
+brew "fzf"     # zsh Ctrl-R/Ctrl-T/Alt-C pickers (zsh/.zshrc)
 
 # ---- Editor & search ----
 brew "neovim"          # editor (configured via nvim/ package)
@@ -29,6 +30,9 @@ brew "tree"            # directory listing
 # ---- Dev tooling ----
 brew "gh"              # GitHub CLI — auth, PRs, issues
 brew "node"
+brew "go"              # also needed for nvim's gopls (Mason installs it via `go install`)
+brew "python@3.14"
+brew "uv"               # Python package/project manager
 brew "shellcheck"      # lints this repo's scripts (also run in CI)
 brew "xcodegen"        # generate .xcodeproj from a spec
 brew "helm"
@@ -38,7 +42,6 @@ brew "kubernetes-cli"
 # ---- macOS setup helpers ----
 brew "dockutil"          # CLI for managing Dock icons (used by macos/defaults.sh)
 brew "mas"               # Mac App Store CLI (used by the mas entries below)
-brew "terminal-notifier" # aliased in zsh/.aliases
 
 # ---- GUI apps ----
 cask "ghostty"            # GPU-accelerated terminal emulator
@@ -48,6 +51,7 @@ cask "claude"             # Claude desktop app
 cask "google-chrome"
 cask "docker-desktop"
 cask "1password"
+cask "1password-cli"      # `op`
 cask "sizeup"             # keyboard-driven window manager
 cask "clipy"              # clipboard manager with history
 cask "thaw"               # menu bar manager — succeeded Ice
@@ -65,6 +69,7 @@ cask "zoom"
 mas "Amphetamine",               id: 937984704   # prevent sleep / screen saver
 mas "Balance Lock",              id: 1019371109  # keep audio balance centred
 mas "Little Snitch Mini",        id: 1629008763  # outbound connection monitor
+mas "Pages",                     id: 361309726
 
 # Safari extensions
 mas "1Password for Safari",      id: 1569813296

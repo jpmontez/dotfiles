@@ -1,0 +1,19 @@
+# Prezto settings; ~/.zprezto/runcoms/zpreztorc lists every option.
+
+zstyle ':prezto:*:*' color 'yes'
+
+zstyle ':prezto:load' pmodule \
+  'environment' \
+  'terminal' \
+  'editor' \
+  'history' \
+  'directory' \
+  'spectrum' \
+  'utility' \
+  'completion' \
+  'history-substring-search' \
+  'prompt'
+
+zstyle ':prezto:module:editor' key-bindings 'emacs'
+
+zstyle ':prezto:module:prompt' theme 'pure'

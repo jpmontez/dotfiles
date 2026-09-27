@@ -3,8 +3,10 @@
 #
 #   bash macos/defaults.sh            apply everything
 #   bash macos/defaults.sh --check    report drift, write nothing, exit 1 if any
+#   bash macos/defaults.sh --capture  copy live values of plist-type settings
+#                                     (SizeUp's shortcuts) into their data files
 #
-# Settings live in one SETTINGS table consumed by both modes, so a check can
+# Settings live in one SETTINGS table consumed by every mode, so a check can
 # never fall out of sync with what apply writes.
 #
 # Some changes (Caps Lock remap) require logout to take effect.
@@ -16,11 +18,14 @@ if [[ "$(uname)" != "Darwin" ]]; then
   exit 1
 fi
 
+MACOS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 MODE=apply
 case "${1:-}" in
-  --check) MODE=check ;;
-  "")      ;;
-  *)       echo "usage: ${0##*/} [--check]" >&2; exit 2 ;;
+  --check)   MODE=check ;;
+  --capture) MODE=capture ;;
+  "")        ;;
+  *)         echo "usage: ${0##*/} [--check|--capture]" >&2; exit 2 ;;
 esac
 
 drift=0
@@ -36,6 +41,10 @@ note_ok()    { [[ "$MODE" == check ]] && echo "  ✓ $*"; return 0; }
 #         currenthost → defaults -currentHost write (per-machine, ByHost plist)
 # domain  -g is the global domain in -currentHost scope; NSGlobalDomain elsewhere
 # type    bool | int | string
+#         plist → value names a file in macos/ holding <key>'s value, for
+#                 nested dicts/arrays (user scope only). The rows double as
+#                 the allowlist --capture copies, so volatile or private keys
+#                 in the same domain never reach the repo.
 # ---------------------------------------------------------------------------
 SETTINGS=(
   # ---- Appearance ----
@@ -52,12 +61,12 @@ SETTINGS=(
   "user|NSGlobalDomain|AppleKeyboardUIMode|int|3"  # Tab moves between all controls
 
   # ---- Text substitution ----
-  # Smart quotes and em-dashes corrupt code, paths, and commit messages.
-  "user|NSGlobalDomain|NSAutomaticQuoteSubstitutionEnabled|bool|false"
+  # Em-dashes and autocorrect mangle paths, flags, and commit messages.
   "user|NSGlobalDomain|NSAutomaticDashSubstitutionEnabled|bool|false"
   "user|NSGlobalDomain|NSAutomaticSpellingCorrectionEnabled|bool|false"
-  # Capitalization and period substitution stay on — they don't mangle code,
-  # and this matches the live machine.
+  # Smart quotes, capitalization, and period substitution stay on by
+  # preference; terminals and code editors ignore these substitutions.
+  "user|NSGlobalDomain|NSAutomaticQuoteSubstitutionEnabled|bool|true"
   "user|NSGlobalDomain|NSAutomaticCapitalizationEnabled|bool|true"
   "user|NSGlobalDomain|NSAutomaticPeriodSubstitutionEnabled|bool|true"
 
@@ -100,6 +109,27 @@ SETTINGS=(
   # ---- Third-party apps ----
   "user|com.irradiatedsoftware.SizeUp|MenuEnabled|bool|false"
   "user|com.irradiatedsoftware.SizeUp|suppressMenuBarDisabledPopup|bool|true"
+  "user|com.irradiatedsoftware.SizeUp|CenterResizeEnabled|bool|false"
+  "user|com.irradiatedsoftware.SizeUp|ShortcutsDisabled|bool|false"
+  # One row per SizeUp action: its shortcut (ComboCode/ComboFlags) and, for
+  # sizing actions, the window rect as screen fractions (X/Y/Width/Height).
+  "user|com.irradiatedsoftware.SizeUp|Center|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Down|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Full Screen|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Left|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Lower Left|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Lower Right|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Next Monitor|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Prev Monitor|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Right|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|SnapBack|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Space Above|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Space Below|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Space Next|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Space Prev|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Up|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Upper Left|plist|SizeUp.plist"
+  "user|com.irradiatedsoftware.SizeUp|Upper Right|plist|SizeUp.plist"
   "user|com.clipy-app.Clipy|kCPYPrefShowStatusItemKey|bool|false"
 )
 
@@ -163,10 +193,49 @@ write_default() {
   fi
 }
 
+# process_plist_setting <domain> <key> <file> — a nested value stored under
+# <key> in <file>. `defaults write` accepts the XML document as-is and keeps
+# every type; check compares both sides as plutil-rendered XML.
+process_plist_setting() {
+  local domain="$1" key="$2" file="$3" actual want
+  want="$(plutil -extract "$key" xml1 -o - "$file")"
+
+  if [[ "$MODE" == apply ]]; then
+    defaults write "$domain" "$key" "$want"
+    return 0
+  fi
+
+  actual="$(defaults export "$domain" - | plutil -extract "$key" xml1 -o - - 2>/dev/null)" || true
+
+  if [[ "$MODE" == capture ]]; then
+    if [[ -z "$actual" ]]; then
+      echo "  ! $domain $key is unset — ${file##*/} left unchanged" >&2
+      return 0
+    fi
+    plutil -replace "$key" -xml "$actual" "$file"
+    echo "  ✓ captured $domain $key"
+    return 0
+  fi
+
+  if [[ -z "$actual" ]]; then
+    note_drift "$domain $key — unset, want the value in ${file##*/}"
+  elif [[ "$actual" != "$want" ]]; then
+    note_drift "$domain $key — differs from ${file##*/}"
+  else
+    note_ok "$domain $key"
+  fi
+}
+
 process_settings() {
   local entry scope domain key type value actual want
   for entry in "${SETTINGS[@]}"; do
     IFS='|' read -r scope domain key type value <<<"$entry"
+
+    if [[ "$type" == plist ]]; then
+      process_plist_setting "$domain" "$key" "$MACOS_DIR/$value"
+      continue
+    fi
+    [[ "$MODE" == capture ]] && continue
 
     if [[ "$MODE" == apply ]]; then
       write_default "$scope" "$domain" "$key" "$type" "$value"
@@ -337,6 +406,13 @@ process_firewall() {
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
+
+if [[ "$MODE" == capture ]]; then
+  echo ">>> Capturing plist-type settings into macos/..."
+  process_settings
+  echo ">>> Review with: git diff macos/"
+  exit 0
+fi
 
 if [[ "$MODE" == apply ]]; then
   echo ">>> Applying macOS defaults..."

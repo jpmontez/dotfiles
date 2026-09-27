@@ -79,7 +79,8 @@ else
     hint "./bootstrap.sh  — unfolds it and restows with --no-folding"
   else
     ok "~/.ssh is a real directory"
-    perms="$(stat -f '%Lp' "$HOME/.ssh" 2>/dev/null || echo "?")"
+    # GNU stat first (Linux); BSD stat (macOS) rejects -c and falls through.
+    perms="$(stat -c '%a' "$HOME/.ssh" 2>/dev/null || stat -f '%Lp' "$HOME/.ssh" 2>/dev/null || echo "?")"
     if [[ "$perms" == "700" ]]; then
       ok "~/.ssh permissions are 700"
     else
