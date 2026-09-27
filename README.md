@@ -32,15 +32,14 @@ Each package directory mirrors `$HOME` and is symlinked in by `stow`:
 
 | Package   | Symlinks to `$HOME`               | Notes                          |
 |-----------|-----------------------------------|--------------------------------|
-| `zsh`     | `.zshrc`, `.zprofile`, `.aliases` | Shell config + prezto init     |
+| `zsh`     | `.zshrc`, `.zprofile`, `.aliases`, `.zpreztorc` | Shell config + prezto init and settings |
 | `git`     | `.gitconfig`                      | Git identity and defaults      |
 | `tmux`    | `.tmux.conf`                      | Prefix, vim keys, copy-paste   |
-| `ghostty` | `.config/ghostty/config`          | Font, window size, bell behaviour |
+| `ghostty` | `.config/ghostty/config`          | Font, palette, bells, Option-as-Alt |
 | `ssh`     | `.ssh/config`                     | Stowed `--no-folding` — see [below](#why-ssh-is-stowed-differently) |
 | `nvim`    | `.config/nvim`                    | Submodule: kickstart.nvim      |
-| `base16`  | `.config/base16-shell`            | Submodule: base16 color scheme |
-| `claude`  | `.claude/settings.json`           | Claude Code plugins, theme, model, notification hook |
-| `zprezto` | `.zprezto`, `.zpreztorc`, etc.    | Manual symlinks via bootstrap  |
+| `claude`  | `.claude/statusline.sh`           | Claude Code status line (`settings.json` is Claude Code's own, not stowed) |
+| `zprezto` | `.zprezto`, `.zshenv`, etc.       | Manual symlinks via bootstrap  |
 
 | Path                | Purpose                                                       |
 |---------------------|---------------------------------------------------------------|
@@ -124,9 +123,8 @@ repo. `doctor.sh` flags it if it ever folds back.
 
 | Submodule                     | Repo                                   |
 |-------------------------------|----------------------------------------|
-| `zprezto`                     | `github.com/jpmontez/prezto`           |
+| `zprezto`                     | `github.com/sorin-ionescu/prezto`      |
 | `nvim/.config/nvim`           | `github.com/jpmontez/kickstart.nvim`   |
-| `base16/.config/base16-shell` | `github.com/chriskempson/base16-shell` |
 
 `bootstrap.sh` initializes them; refresh with `git submodule update --init --recursive`.
 

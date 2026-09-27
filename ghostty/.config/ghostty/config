@@ -8,12 +8,13 @@ window-width = 80
 # which is unfocused-only and silent.
 bell-features = system,audio,attention,title
 
-# base16-ocean, pinned here rather than left to base16-shell alone. The shell
-# script only repaints the palette via OSC escapes once an interactive zsh
-# starts, so the terminal would otherwise open on Ghostty's default scheme and
-# flip mid-startup — and anything not launched from an interactive shell would
-# keep the wrong palette. Values are byte-identical to
-# base16-shell/scripts/base16-ocean.sh, so the two never disagree.
+# Left Option sends Alt (Meta) so shell, tmux and nvim Alt bindings work —
+# e.g. fzf's Alt-C, zsh's Alt-. (insert last argument), Alt-b/f word moves.
+# Right Option still composes accented characters.
+macos-option-as-alt = left
+
+# base16-ocean. This is the one terminal palette: tmux styles with these ANSI
+# slots and nvim's base16-ocean colorscheme uses the same values.
 # Slots 16-21 carry base09/0F/01/02/04/06, which base16 uses for the extra
 # neutrals (e.g. colour20 = base04) that plain ANSI has no room for.
 palette = 0=#2b303b

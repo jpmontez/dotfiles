@@ -1,17 +1,6 @@
 # ---- PATH dedupe ----
 typeset -U path PATH
 
-# ---- base16 shell ----
-# profile_helper only applies a theme if ~/.base16_theme exists; without this
-# it just defines the base16_* aliases and leaves the terminal on its own
-# palette. Ghostty pins the same scheme statically, so this mainly keeps the
-# runtime base16_* switchers working and exports BASE16_THEME.
-BASE16_SHELL="$HOME/.config/base16-shell/"
-BASE16_DEFAULT_THEME=ocean
-[ -n "$PS1" ] && \
-    [ -s "$BASE16_SHELL/profile_helper.sh" ] && \
-        source "$BASE16_SHELL/profile_helper.sh"
-
 # ---- prezto ----
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
@@ -30,8 +19,11 @@ print() {
 # ---- environment ----
 export COLORTERM=truecolor
 export EDITOR=nvim
+export VISUAL=nvim
 # -F: quit if one screen, -R: pass raw color, -X: don't clear screen on exit
 export PAGER='less -FRX'
+# man pages in nvim: base16 colours, K / Ctrl-] follow references
+export MANPAGER='nvim +Man!'
 export CLAUDE_CODE_NO_FLICKER=1
 
 # ---- aliases / wrappers ----
@@ -48,11 +40,12 @@ tmux() {
 
 # Resume the most recent Claude Code session for the current directory when
 # invoked bare, falling back to a fresh session if none exists.
-# Claude Code stores sessions under ~/.claude/projects/<pwd-with-/-as--> /;
-# ${PWD//\//-} encodes the path, and (N) suppresses the glob error on no match.
+# Claude Code stores sessions under ~/.claude/projects/<pwd>/ with every
+# non-alphanumeric character (/, ., space, ...) replaced by '-', which
+# ${PWD//[^[:alnum:]]/-} reproduces; (N) suppresses the glob error on no match.
 claude() {
   if (( $# == 0 )); then
-    local sessions=("$HOME/.claude/projects/${PWD//\//-}"/*.jsonl(N))
+    local sessions=("$HOME/.claude/projects/${PWD//[^[:alnum:]]/-}"/*.jsonl(N))
     if (( ${#sessions} > 0 )); then
       command claude --continue
     else
@@ -63,6 +56,16 @@ claude() {
   fi
 }
 [ -f "$HOME/.aliases" ] && source "$HOME/.aliases"
+
+# ---- fzf ----
+# Ctrl-R history, Ctrl-T files, Alt-C cd (Alt needs Ghostty's
+# macos-option-as-alt). Sourced after prezto so its Ctrl-R binding wins.
+# fd honours .gitignore; --tmux opens pickers in a tmux popup (ignored outside
+# tmux); --color=16 uses the ANSI palette, like tmux's styling.
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_DEFAULT_OPTS='--tmux 80%,60% --color=16'
+(( $+commands[fzf] )) && source <(fzf --zsh)
 
 # ---- Go ----
 export GOPATH="${HOME}/Development/go"
