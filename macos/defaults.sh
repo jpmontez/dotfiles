@@ -312,7 +312,7 @@ process_dock_apps() {
   for app in "${present[@]}"; do
     dockutil --add "$app" --no-restart >/dev/null
   done
-  dockutil --add "$HOME/Downloads" --view fan --display folder --no-restart >/dev/null
+  dockutil --add "$HOME/Downloads" --view fan --display stack --no-restart >/dev/null
 }
 
 # Registration goes through System Events, which requires the calling terminal
