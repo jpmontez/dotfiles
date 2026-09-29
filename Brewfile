@@ -52,7 +52,7 @@ cask "google-chrome"
 cask "docker-desktop"
 cask "1password"
 cask "1password-cli"      # `op`
-cask "sizeup"             # keyboard-driven window manager
+cask "rectangle"          # keyboard-driven window manager
 cask "clipy"              # clipboard manager with history
 cask "thaw"               # menu bar manager — succeeded Ice
 cask "keyboardcleantool"  # blocks input for keyboard cleaning

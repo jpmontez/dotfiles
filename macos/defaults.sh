@@ -4,7 +4,7 @@
 #   bash macos/defaults.sh            apply everything
 #   bash macos/defaults.sh --check    report drift, write nothing, exit 1 if any
 #   bash macos/defaults.sh --capture  copy live values of plist-type settings
-#                                     (SizeUp's shortcuts) into their data files
+#                                     (Rectangle's shortcuts) into their data files
 #
 # Settings live in one SETTINGS table consumed by every mode, so a check can
 # never fall out of sync with what apply writes.
@@ -42,9 +42,10 @@ note_ok()    { [[ "$MODE" == check ]] && echo "  ✓ $*"; return 0; }
 # domain  -g is the global domain in -currentHost scope; NSGlobalDomain elsewhere
 # type    bool | int | string
 #         plist → value names a file in macos/ holding <key>'s value, for
-#                 nested dicts/arrays (user scope only). The rows double as
-#                 the allowlist --capture copies, so volatile or private keys
-#                 in the same domain never reach the repo.
+#                 nested dicts/arrays (user scope only); file:path reads
+#                 <key> from the dict at key path <path> inside the file. The
+#                 rows double as the allowlist --capture copies, so volatile or
+#                 private keys in the same domain never reach the repo.
 # ---------------------------------------------------------------------------
 SETTINGS=(
   # ---- Appearance ----
@@ -107,29 +108,21 @@ SETTINGS=(
   "user|com.apple.controlcenter|NSStatusItem VisibleCC NowPlaying|bool|true"
 
   # ---- Third-party apps ----
-  "user|com.irradiatedsoftware.SizeUp|MenuEnabled|bool|false"
-  "user|com.irradiatedsoftware.SizeUp|suppressMenuBarDisabledPopup|bool|true"
-  "user|com.irradiatedsoftware.SizeUp|CenterResizeEnabled|bool|false"
-  "user|com.irradiatedsoftware.SizeUp|ShortcutsDisabled|bool|false"
-  # One row per SizeUp action: its shortcut (ComboCode/ComboFlags) and, for
-  # sizing actions, the window rect as screen fractions (X/Y/Width/Height).
-  "user|com.irradiatedsoftware.SizeUp|Center|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Down|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Full Screen|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Left|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Lower Left|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Lower Right|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Next Monitor|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Prev Monitor|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Right|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|SnapBack|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Space Above|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Space Below|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Space Next|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Space Prev|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Up|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Upper Left|plist|SizeUp.plist"
-  "user|com.irradiatedsoftware.SizeUp|Upper Right|plist|SizeUp.plist"
+  # One row per Rectangle action's shortcut, read from the "shortcuts" dict of
+  # Rectangle's own export format.
+  "user|com.knollsoft.Rectangle|bottomHalf|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|bottomLeft|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|bottomRight|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|center|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|leftHalf|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|maximize|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|nextDisplay|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|previousDisplay|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|restore|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|rightHalf|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|topHalf|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|topLeft|plist|RectangleConfig.json:shortcuts"
+  "user|com.knollsoft.Rectangle|topRight|plist|RectangleConfig.json:shortcuts"
   "user|com.clipy-app.Clipy|kCPYPrefShowStatusItemKey|bool|false"
 )
 
@@ -148,7 +141,7 @@ DOCK_APPS=(
 
 # Apps to register as login items.
 LOGIN_ITEM_APPS=(
-  "/Applications/SizeUp.app"
+  "/Applications/Rectangle.app"
   "/Applications/Mullvad VPN.app"
   "/Applications/Amphetamine.app"
   "/Applications/Thaw.app"
@@ -193,12 +186,14 @@ write_default() {
   fi
 }
 
-# process_plist_setting <domain> <key> <file> — a nested value stored under
-# <key> in <file>. `defaults write` accepts the XML document as-is and keeps
-# every type; check compares both sides as plutil-rendered XML.
+# process_plist_setting <domain> <key> <file>[:<path>] — a nested value stored
+# under <key> (or <path>.<key>) in <file>, which may be plist or JSON.
+# `defaults write` accepts the XML document as-is and keeps every type; check
+# compares both sides as plutil-rendered XML.
 process_plist_setting() {
-  local domain="$1" key="$2" file="$3" actual want
-  want="$(plutil -extract "$key" xml1 -o - "$file")"
+  local domain="$1" key="$2" file="${3%%:*}" actual want src="$2"
+  [[ "$3" == *:* ]] && src="${3#*:}.$key"
+  want="$(plutil -extract "$src" xml1 -o - "$file")"
 
   if [[ "$MODE" == apply ]]; then
     defaults write "$domain" "$key" "$want"
@@ -212,7 +207,7 @@ process_plist_setting() {
       echo "  ! $domain $key is unset — ${file##*/} left unchanged" >&2
       return 0
     fi
-    plutil -replace "$key" -xml "$actual" "$file"
+    plutil -replace "$src" -xml "$actual" "$file"
     echo "  ✓ captured $domain $key"
     return 0
   fi
