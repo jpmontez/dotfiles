@@ -6,7 +6,7 @@ One-time system setup for fresh macOS installs. Not a stow package.
 ```bash
 bash macos/defaults.sh            # apply
 bash macos/defaults.sh --check    # report drift, write nothing, exit 1 if any
-bash macos/defaults.sh --capture  # re-copy SizeUp's live shortcuts into SizeUp.plist
+bash macos/defaults.sh --capture  # re-copy Rectangle's live shortcuts into RectangleConfig.json
 ```
 
 Idempotent — safe to re-run. `bootstrap.sh` prompts to run it; `doctor.sh` calls
@@ -26,7 +26,8 @@ apply writes. Booleans are normalised before comparison, since `defaults read`
 prints `0`/`1` rather than `false`/`true`.
 
 Nested values (dicts, arrays) use type `plist`: the row's value names a file in
-`macos/` holding that key's value. Apply passes the XML straight to
+`macos/` holding that key's value; `file:path` reads it from the dict at key
+path `path` inside the file, which may be plist or JSON. Apply passes the XML straight to
 `defaults write`, which keeps every type; check compares the XML `plutil`
 renders from both sides.
 
@@ -38,14 +39,15 @@ an explicit check branch.
 
 Read `SETTINGS` for the exact list. In summary: appearance, keyboard, text
 substitution, trackpad, Dock, Finder, screen saver, menu bar, and
-per-app defaults for SizeUp and Clipy. Beyond the table:
+per-app defaults for Rectangle and Clipy. Beyond the table:
 
-- **SizeUp** — every shortcut and window size, stored as `plist` rows backed by
-  [`SizeUp.plist`](SizeUp.plist). After changing SizeUp's preferences, run
-  `bash macos/defaults.sh --capture` and commit the diff. Capture copies only
-  the keys listed in `SETTINGS`, so usage counters, update timestamps, and window
-  positions in the same domain stay out of the repo; a new key needs its row
-  added first. Quit and relaunch SizeUp after an apply so it picks the values up.
+- **Rectangle** — every shortcut, stored as `plist` rows backed by the
+  `shortcuts` dict of [`RectangleConfig.json`](RectangleConfig.json), Rectangle's
+  own export format. After changing shortcuts, either export from Rectangle's
+  settings over that file or run `bash macos/defaults.sh --capture` (which
+  rewrites it as compact JSON), then commit the diff. A new shortcut needs its
+  row added first. Quit and relaunch Rectangle after an apply so it picks the
+  values up. It launches at login via `LOGIN_ITEM_APPS`.
 
 - **Dock contents** — populated via `dockutil` from `DOCK_APPS`. Entries whose app doesn't exist on this macOS version are skipped rather than aborting the run.
 - **Screen saver** — password required immediately. *Best-effort:* since Ventura this pane is partly system-managed and the write may not stick; `--check` shows it as drift if so.
