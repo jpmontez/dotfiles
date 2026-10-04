@@ -210,10 +210,6 @@ if [[ ! -d "$KNOWLEDGE_DIR" ]]; then
     echo ">>> Skipping $KNOWLEDGE_REPO (not signed in to gh, or no access). Re-run after gh auth login."
   fi
 fi
-if [[ -x "$KNOWLEDGE_DIR/link.sh" ]]; then
-  echo ">>> Linking knowledge bundles..."
-  "$KNOWLEDGE_DIR/link.sh" || echo ">>> Warning: some knowledge links need attention (see above)."
-fi
 
 # ---- macOS system defaults ----
 applied_defaults=0

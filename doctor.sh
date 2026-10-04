@@ -142,13 +142,14 @@ else
   ok "working tree clean"
 fi
 
-if [[ -x "$KNOWLEDGE_DIR/link.sh" ]]; then
-  if links="$("$KNOWLEDGE_DIR/link.sh" --check 2>&1)"; then
-    ok "knowledge bundles linked from $KNOWLEDGE_DIR"
+# Read-only: compares the clone's origin and never runs anything from it.
+if [[ -d "$KNOWLEDGE_DIR/.git" ]]; then
+  origin="$(git -C "$KNOWLEDGE_DIR" remote get-url origin 2>/dev/null || true)"
+  if [[ "$origin" =~ github\.com[:/]${KNOWLEDGE_REPO}(\.git)?$ ]]; then
+    ok "knowledge repo $KNOWLEDGE_REPO at $KNOWLEDGE_DIR"
   else
-    bad "knowledge bundle links out of sync"
-    grep -v '✓' <<<"$links" | detail
-    hint "$KNOWLEDGE_DIR/link.sh"
+    bad "$KNOWLEDGE_DIR has origin '${origin:-none}', want $KNOWLEDGE_REPO"
+    hint "git -C $KNOWLEDGE_DIR remote -v"
   fi
 else
   ok "no private knowledge repo at $KNOWLEDGE_DIR (optional)"

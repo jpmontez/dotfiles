@@ -21,9 +21,9 @@ STOW_PACKAGES=(zsh git tmux ghostty nvim claude)
 SSH_STOW_OPTS=(--no-folding)
 
 # Private repo holding Claude Code's OKF knowledge bundles. bootstrap clones it
-# when the GitHub account can see it and runs its link.sh, which symlinks each
-# bundle into place; doctor runs link.sh --check. Optional: a fork without
-# access skips it.
+# when the GitHub account can see it; doctor checks the clone's origin. Nothing
+# in it is executed or linked into place. Optional: a fork without access skips
+# it.
 KNOWLEDGE_REPO="jpmontez/knowledge"
 KNOWLEDGE_DIR="$HOME/Development/knowledge"
 

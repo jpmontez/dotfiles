@@ -11,9 +11,8 @@ Personal dotfiles managed with GNU stow. Full details: README.md.
   `doctor.sh` is read-only drift detection only — never edits anything.
 
 - `KNOWLEDGE_REPO`/`KNOWLEDGE_DIR` in `lib.sh` point at the private OKF
-  knowledge repo; bootstrap clones it and runs its `link.sh`, doctor runs
-  `link.sh --check`. Never commit a `knowledge/` directory here: it is a
-  symlink hidden through `.git/info/exclude`.
+  knowledge repo; bootstrap clones it and doctor checks its origin. Never run
+  code from it, and never add a `knowledge/` directory or link here.
 
 ## Conventions
 - New dotfile: create/extend a package dir mirroring `$HOME`, then add the
