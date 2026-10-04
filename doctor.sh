@@ -142,6 +142,18 @@ else
   ok "working tree clean"
 fi
 
+if [[ -x "$KNOWLEDGE_DIR/link.sh" ]]; then
+  if links="$("$KNOWLEDGE_DIR/link.sh" --check 2>&1)"; then
+    ok "knowledge bundles linked from $KNOWLEDGE_DIR"
+  else
+    bad "knowledge bundle links out of sync"
+    grep -v '✓' <<<"$links" | detail
+    hint "$KNOWLEDGE_DIR/link.sh"
+  fi
+else
+  ok "no private knowledge repo at $KNOWLEDGE_DIR (optional)"
+fi
+
 # ---------------------------------------------------------------------------
 section "Environment"
 # ---------------------------------------------------------------------------

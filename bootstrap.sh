@@ -199,6 +199,22 @@ if [[ "$SHELL" != "$ZSH_PATH" ]]; then
   chsh -s "$ZSH_PATH" || echo ">>> Warning: could not change default shell automatically; run 'chsh -s $ZSH_PATH' manually."
 fi
 
+# ---- Private knowledge bundles ----
+# Optional: needs a GitHub login that can see the repo, so a first run on a new
+# machine (before `gh auth login`) or a fork just skips it.
+if [[ ! -d "$KNOWLEDGE_DIR" ]]; then
+  if gh auth status &>/dev/null && gh repo view "$KNOWLEDGE_REPO" &>/dev/null; then
+    echo ">>> Cloning $KNOWLEDGE_REPO..."
+    gh repo clone "$KNOWLEDGE_REPO" "$KNOWLEDGE_DIR"
+  else
+    echo ">>> Skipping $KNOWLEDGE_REPO (not signed in to gh, or no access). Re-run after gh auth login."
+  fi
+fi
+if [[ -x "$KNOWLEDGE_DIR/link.sh" ]]; then
+  echo ">>> Linking knowledge bundles..."
+  "$KNOWLEDGE_DIR/link.sh" || echo ">>> Warning: some knowledge links need attention (see above)."
+fi
+
 # ---- macOS system defaults ----
 applied_defaults=0
 if [[ "$PLATFORM" == "macos" ]] && (( APPLY_DEFAULTS )); then

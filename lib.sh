@@ -20,6 +20,13 @@ STOW_PACKAGES=(zsh git tmux ghostty nvim claude)
 # every key or known_hosts file written there would land in the working tree.
 SSH_STOW_OPTS=(--no-folding)
 
+# Private repo holding Claude Code's OKF knowledge bundles. bootstrap clones it
+# when the GitHub account can see it and runs its link.sh, which symlinks each
+# bundle into place; doctor runs link.sh --check. Optional: a fork without
+# access skips it.
+KNOWLEDGE_REPO="jpmontez/knowledge"
+KNOWLEDGE_DIR="$HOME/Development/knowledge"
+
 if [[ "$(uname)" == "Darwin" ]]; then
   PLATFORM="macos"
 else

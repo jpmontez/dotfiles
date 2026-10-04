@@ -119,6 +119,21 @@ repo. `doctor.sh` flags it if it ever folds back.
 
 ---
 
+## Private knowledge bundles
+
+Claude Code's [Open Knowledge Format](https://github.com/GoogleCloudPlatform/open-knowledge-format)
+bundles live in a separate private repo, `jpmontez/knowledge`, cloned to
+`~/Development/knowledge`. Its `link.sh` symlinks each bundle to where sessions
+look for it (`<repo>/knowledge`, `~/.claude/knowledge`) and hides the links
+through each repo's `.git/info/exclude`, so nothing from it lands in this or any
+other public repo.
+
+Bootstrap clones it when `gh` is signed in with access and runs `link.sh`;
+otherwise it skips the step. `doctor.sh` runs `link.sh --check`. It's optional,
+so a fork without access loses nothing.
+
+---
+
 ## Submodules
 
 | Submodule                     | Repo                                   |
@@ -133,7 +148,7 @@ repo. `doctor.sh` flags it if it ever folds back.
 ## Post-Install
 
 1. **SSH keys** — copy or generate into `~/.ssh/` (`ssh-keygen -t ed25519`). It's a real directory, so keys stay out of the working tree.
-2. **GitHub CLI** — `gh auth login`.
+2. **GitHub CLI** — `gh auth login`, then re-run `./bootstrap.sh` to clone and link the private knowledge repo.
 3. **App Store** — sign in, then re-run `brew bundle` if `mas` entries were skipped.
 4. **tmux plugins** — TPM auto-installs on first launch; `prefix + I` after adding plugins later.
 5. **Check your work** — `./doctor.sh` should come back clean.

@@ -10,6 +10,11 @@ Personal dotfiles managed with GNU stow. Full details: README.md.
 - `bootstrap.sh` installs + stows everything (idempotent, safe to re-run).
   `doctor.sh` is read-only drift detection only — never edits anything.
 
+- `KNOWLEDGE_REPO`/`KNOWLEDGE_DIR` in `lib.sh` point at the private OKF
+  knowledge repo; bootstrap clones it and runs its `link.sh`, doctor runs
+  `link.sh --check`. Never commit a `knowledge/` directory here: it is a
+  symlink hidden through `.git/info/exclude`.
+
 ## Conventions
 - New dotfile: create/extend a package dir mirroring `$HOME`, then add the
   package name to `STOW_PACKAGES` in `lib.sh`. Don't hand-symlink or
