@@ -144,7 +144,8 @@ fi
 
 # Read-only: compares the clone's origin and never runs anything from it.
 if [[ -d "$KNOWLEDGE_DIR/.git" ]]; then
-  origin="$(git -C "$KNOWLEDGE_DIR" remote get-url origin 2>/dev/null || true)"
+  # Strip any user:token@ before the URL is compared or printed.
+  origin="$(git -C "$KNOWLEDGE_DIR" remote get-url origin 2>/dev/null | sed -E 's#^([a-z+]+://)[^/@]*@#\1#' || true)"
   if [[ "$origin" =~ github\.com[:/]${KNOWLEDGE_REPO}(\.git)?$ ]]; then
     ok "knowledge repo $KNOWLEDGE_REPO at $KNOWLEDGE_DIR"
   else
